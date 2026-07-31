@@ -975,7 +975,9 @@ function conectarCargaRapida(cont, P){
         const r = await fetch(API_BASE + '/resultados', {
           method: 'POST',
           headers: { ...HEADERS_SUPABASE, 'content-type': 'application/json', 'x-clave': claveAcceso() },
-          body: JSON.stringify({ juego: P.jsonJuego }),
+          // "turno" solo lo usa Quiniela; en el resto queda undefined y JSON.stringify
+          // lo descarta solo, así que no hace falta ramificar por juego acá
+          body: JSON.stringify({ juego: P.jsonJuego, turno: P.estado.turno }),
         });
         const data = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(data.error || 'El servidor no respondió bien.');
@@ -2351,7 +2353,7 @@ ${PROMPT_CIERRE}`,
    cada columna necesita su propio ancho fijo para que no se corra nada.
    ========================================================================== */
 
-const QUINIELA_TURNOS = ['LA PREVIA', 'PRIMERA', 'MATUTINA', 'VESPERTINA', 'NOCTURNA'];
+const QUINIELA_TURNOS = ['LA PREVIA', 'EL PRIMERO', 'MATUTINA', 'VESPERTINA', 'NOCTURNA'];
 // tonos del extracto oficial: banda clara, texto oscuro encima
 const QUINIELA_TONOS  = ['#EFCF6B', '#87C68A', '#8AD3EA', '#A9AAE0'];
 
@@ -2379,6 +2381,7 @@ function drawImagenEnCaja(img, cx, cy, maxW, maxH){
 const quiniela = {
   nombre: 'Quiniela',
   archivo: 'la3ce-quiniela',
+  jsonJuego: 'quiniela',
   estado: {
     titulo: 'RESULTADOS',
     plataforma: 'QUINIELA',
@@ -2407,7 +2410,7 @@ const quiniela = {
 Formato exacto:
 {"turno":"","fecha":"","caducidad":"","loterias":[{"nombre":"","codigo":"","nums":""}]}
 Reglas:
-- "turno": el sorteo del que se trata (LA PREVIA, PRIMERA, MATUTINA, VESPERTINA o NOCTURNA).
+- "turno": el sorteo del que se trata (LA PREVIA, EL PRIMERO, MATUTINA, VESPERTINA o NOCTURNA).
 - "fecha": la fecha del encabezado, tal cual (ej. "del viernes 31 julio 2026").
 - "caducidad": la fecha de caducidad, si figura.
 - Una entrada en "loterias" por cada columna, EN EL MISMO ORDEN de izquierda a derecha.
