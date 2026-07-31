@@ -2099,28 +2099,29 @@ const telekino = {
 };
 
 /* ==========================================================================
-   PLANTILLA · PATAGONIA TELEBINGO
+   PLANTILLA · PATAGONIA TELEBINGO (ganadores por ronda)
+   Sin nombres: TIPO (Línea/Bingo) · CARTÓN · AG. · LOCALIDAD · PREMIO, agrupados
+   por ronda — la misma tabla que publica el portal junto a los números
+   sorteados, así que sale de la misma fuente que "Telebingo números".
    ========================================================================== */
 
-const nuevoCupon = () => ({ nombre:'', doc:'', localidad:'' });
+const nuevoGanador = () => ({ ronda: 1, tipo: 'Línea', carton: '', ag: '', localidad: '', premio: '' });
 
 const telebingo = {
   nombre: 'Telebingo',
   archivo: 'la3ce-telebingo',
+  jsonJuego: 'telebingo-ganadores',
   estado: {
-    titulo: 'SORTEO CUPONES NO GANADORES',
+    titulo: 'GANADORES DEL SORTEO',
     plataforma: 'PATAGONIA TELEBINGO',
-    periodo: 'SORTEO JUNIO 2026',
-    premios: '5 PREMIOS DE $65.000 C/U',
-    cols: ['APELLIDO Y NOMBRE', 'N. DE DOC.', 'LOCALIDAD'],
-    // datos de ejemplo inventados: esta pieza publica datos personales reales,
-    // así que nadie tiene que poder subirla sin reemplazarlos primero
-    filas: [
-      { nombre:'EJEMPLO ANA',    doc:'11.111.111', localidad:'GRAL. ROCA' },
-      { nombre:'EJEMPLO BRUNO',  doc:'22.222.222', localidad:'CIPOLLETTI' },
-      { nombre:'EJEMPLO CARLA',  doc:'33.333.333', localidad:'CERVANTES' },
-      { nombre:'EJEMPLO DIEGO',  doc:'44.444.444', localidad:'ALLEN' },
-      { nombre:'EJEMPLO ELENA',  doc:'55.555.555', localidad:'VILLA REGINA' },
+    sorteo: '458',
+    fecha: '26/07/2026',
+    // datos reales del sorteo del 26/07/2026, como punto de partida
+    ganadores: [
+      { ronda:1, tipo:'Línea', carton:'35974',  ag:'32-74',  localidad:'Bariloche - Rio Negro',   premio:'720000' },
+      { ronda:1, tipo:'Bingo', carton:'307821', ag:'53-0',   localidad:'Allen - Rio Negro',       premio:'1800000' },
+      { ronda:2, tipo:'Línea', carton:'38372',  ag:'46-0',   localidad:'Catriel - Rio Negro',     premio:'1450000' },
+      { ronda:2, tipo:'Bingo', carton:'513802', ag:'242-0',  localidad:'Centenario - Neuquen',    premio:'3600000' },
     ],
     nota: 'En caso de divergencia entre este contenido y los extractos oficiales de Lotería de Río Negro, tendrán plena validez estos últimos.',
     logo: 'telebingo',
@@ -2131,128 +2132,135 @@ const telebingo = {
     prompt:
 `Mirá la captura del sorteo y devolvéme SOLO un JSON, sin explicaciones ni bloque de código.
 Formato exacto:
-{"periodo":"","premios":"","cols":["","",""],"filas":[{"nombre":"","doc":"","localidad":""}],"nota":""}
+{"sorteo":"","fecha":"","ganadores":[{"ronda":1,"tipo":"Línea","carton":"","ag":"","localidad":"","premio":""}]}
 Reglas:
-- Un objeto en "filas" por cada cupón de la tabla, respetando el orden en que aparecen.
-- "nombre": el apellido y nombre EXACTAMENTE como está escrito. No lo corrijas, no lo completes,
-  no le cambies el orden ni le agregues acentos que no estén.
-- "doc": el número de documento tal cual figura, con los puntos.
+- Un objeto en "ganadores" por cada fila de la tabla de premios (Línea y Bingo de cada ronda).
+- "ronda": el número de ronda a la que pertenece esa tabla (1, 2…).
+- "tipo": "Línea" o "Bingo", tal cual figura.
+- "carton": el número de cartón ganador.
+- "ag": el código de agencia (ej. "32-74").
 - "localidad": tal cual figura.
-- "cols": los tres encabezados de la tabla, en orden.
-- "periodo": el período del sorteo (ej. "SORTEO JUNIO 2026").
-- "premios": cuántos premios y de cuánto (ej. "5 PREMIOS DE $65.000 C/U").
-- "nota": el texto legal al pie de la tabla, si lo hay.
-IMPORTANTE: estos son datos personales de gente real. Si un apellido o un documento no se lee con
-total claridad, dejá ese campo vacío en lugar de arriesgar. Es preferible un campo vacío a un dato
-equivocado.
+- "premio": solo dígitos, sin puntos ni signo peso ni centavos (ej. "720000").
+- "sorteo": el número de sorteo. "fecha": la fecha del sorteo.
 ${PROMPT_CIERRE}`,
 
     aplicar(d, E){
-      if (!Array.isArray(d.filas) || !d.filas.length)
-        throw new Error('Falta la lista de cupones ("filas"). No cambié nada.');
+      if (!Array.isArray(d.ganadores) || !d.ganadores.length)
+        throw new Error('Falta la lista de ganadores ("ganadores"). No cambié nada.');
 
-      if (txt(d.periodo)) E.periodo = txt(d.periodo);
-      if (txt(d.premios)) E.premios = txt(d.premios);
-      if (typeof d.nota === 'string') E.nota = txt(d.nota);
-      if (Array.isArray(d.cols))
-        d.cols.forEach((c, i) => { if (txt(c) && i < 3) E.cols[i] = txt(c); });
+      if (txt(d.sorteo)) E.sorteo = txt(d.sorteo);
+      if (txt(d.fecha))  E.fecha  = txt(d.fecha);
 
-      E.filas = d.filas.slice(0, 20).map(f => ({
-        nombre:    txt(f && f.nombre),
-        doc:       txt(f && f.doc),
-        localidad: txt(f && f.localidad),
+      E.ganadores = d.ganadores.slice(0, 12).map(g => ({
+        ronda:     Number(g && g.ronda) || 1,
+        tipo:      txt(g && g.tipo),
+        carton:    txt(g && g.carton),
+        ag:        txt(g && g.ag),
+        localidad: txt(g && g.localidad),
+        premio:    String((g && g.premio) || '').replace(/\D/g, ''),
       }));
 
-      const incompletos = E.filas.filter(f => !f.nombre || !f.doc).length;
+      const incompletos = E.ganadores.filter(g => !g.carton || !g.premio).length;
       return incompletos
-        ? `${E.filas.length} cupón(es) cargados — ojo: ${incompletos} quedaron incompletos, completalos a mano`
-        : `${E.filas.length} cupón(es) cargados`;
+        ? `${E.ganadores.length} ganador(es) cargados — ojo: ${incompletos} quedaron incompletos, completalos a mano`
+        : `${E.ganadores.length} ganador(es) cargados`;
     },
   },
 
   draw(){
     const E = this.estado;
-    const TOP = 560, BOTTOM = 1500, X = 70, ANCHO = 940;
+    const TOP = 560, X = 70, ANCHO = 940;
 
-    // ---- chips: período + premios ----
-    const c1 = (E.periodo || '').toUpperCase();
-    const c2 = (E.premios || '').toUpperCase();
-    ctx.font = `700 22px ${FF}`;
-    const anc = t => [...t].reduce((a, ch) => a + ctx.measureText(ch).width + 3, 0) - 3;
-    const pw1 = Math.max(anc(c1) + 52, 160), pw2 = Math.max(anc(c2) + 52, 160);
-    let x0 = 540 - (pw1 + 16 + pw2) / 2;
+    drawChipsDuo(458, [
+      ['SORTEO Nº ' + (E.sorteo || '–'), C.blanco],
+      [(E.fecha || '').toUpperCase(), C.amarillo],
+    ], { font:24, sp:4, pad:56, min:170 });
 
-    [[c1, pw1, C.amarillo], [c2, pw2, C.blanco]].forEach(([txt, pw, color]) => {
+    // agrupar por ronda, respetando el orden en que aparecen
+    const rondas = [];
+    (E.ganadores || []).forEach(g => {
+      let r = rondas.find(r => r.n === g.ronda);
+      if (!r){ r = { n: g.ronda, filas: [] }; rondas.push(r); }
+      r.filas.push(g);
+    });
+    rondas.sort((a, b) => a.n - b.n);
+
+    const wTipo = Math.round(ANCHO * 0.12), wCarton = Math.round(ANCHO * 0.18),
+          wAg = Math.round(ANCHO * 0.13), wLoc = Math.round(ANCHO * 0.33),
+          wPremio = ANCHO - wTipo - wCarton - wAg - wLoc;
+    const anchos = [wTipo, wCarton, wAg, wLoc, wPremio];
+    const centros = (() => {
+      let x = X; const out = [];
+      anchos.forEach(w => { out.push(x + w / 2); x += w; });
+      return out;
+    })();
+    const cols = ['TIPO', 'CARTÓN', 'AG.', 'LOCALIDAD', 'PREMIO'];
+
+    const LABEL_H = 54, GAP_LT = 14, HEADER_H = 60, ROW_H = 64, GAP_BLOQUES = 46;
+    let y = TOP;
+
+    rondas.forEach((r, idx) => {
+      // ---- chip de la ronda ----
+      const label = (r.n === 1 ? '1ª RONDA' : r.n === 2 ? '2ª RONDA' : r.n + 'ª RONDA');
+      ctx.font = `800 22px ${FF}`;
+      const wLabel = Math.max([...label].reduce((a, ch) => a + ctx.measureText(ch).width + 2, 0) + 50, 160);
+      const lx = 540 - wLabel / 2;
       ctx.fillStyle = C.grafito2;
-      rr(x0, 458, pw, 50, 25); ctx.fill();
+      rr(lx, y, wLabel, LABEL_H, LABEL_H / 2); ctx.fill();
       ctx.strokeStyle = C.amarillo; ctx.lineWidth = 2;
-      rr(x0, 458, pw, 50, 25); ctx.stroke();
-      ctx.fillStyle = color;
-      tracked(txt, x0 + pw/2, 490, 3, 'center');
-      x0 += pw + 16;
-    });
+      rr(lx, y, wLabel, LABEL_H, LABEL_H / 2); ctx.stroke();
+      ctx.fillStyle = C.amarillo;
+      tracked(label, 540, y + LABEL_H / 2 + 22 * 0.36, 2, 'center');
+      y += LABEL_H + GAP_LT;
 
-    // ---- tabla: crece con pocas filas, se achica con muchas, y siempre centrada ----
-    // las filas todavía en blanco no se dibujan: si no, quedan bandas fantasma
-    const filas = E.filas.filter(f => (f.nombre || f.doc || f.localidad || '').trim());
-    const base = { header:62, fila:66, nota:60 };
-    const naturalH = base.header + filas.length * base.fila + (E.nota ? base.nota : 0);
-    const disponible = BOTTOM - TOP;
-    const s = Math.max(0.5, Math.min(1.55, disponible / Math.max(naturalH, 1)));
-    const m = k => Math.round(k * s);
+      // ---- encabezado de la tabla ----
+      const hg = ctx.createLinearGradient(X, 0, X + ANCHO, 0);
+      hg.addColorStop(0, C.verde); hg.addColorStop(1, C.verdeClaro);
+      ctx.fillStyle = hg;
+      rr(X, y, ANCHO, HEADER_H, 14); ctx.fill();
+      ctx.fillStyle = C.blanco;
+      const fHead = 21;
+      cols.forEach((c, i) => {
+        ctx.font = `800 ${fit(c, anchos[i] - 16, fHead, 800)}px ${FF}`;
+        tracked(c, centros[i], y + HEADER_H / 2 + fHead * 0.34, 2, 'center');
+      });
+      const tablaTop = y;
+      y += HEADER_H;
 
-    const wNom = Math.round(ANCHO * 0.45);
-    const wDoc = Math.round(ANCHO * 0.27);
-    const wLoc = ANCHO - wNom - wDoc;
-    const centros = [X + wNom/2, X + wNom + wDoc/2, X + wNom + wDoc + wLoc/2];
-
-    const TABLA_TOP = TOP + Math.max(0, (disponible - naturalH * s) / 2);
-    let y = TABLA_TOP;
-    const hHeader = m(base.header);
-    const hg = ctx.createLinearGradient(X, 0, X + ANCHO, 0);
-    hg.addColorStop(0, C.verde); hg.addColorStop(1, C.verdeClaro);
-    ctx.fillStyle = hg;
-    rr(X, y, ANCHO, hHeader, Math.round(14 * s));
-    ctx.fill();
-
-    ctx.fillStyle = C.blanco;
-    const fHead = Math.max(m(21), 11);
-    ctx.font = `800 ${fHead}px ${FF}`;
-    (E.cols || []).forEach((c, i) => {
-      const maxW = [wNom, wDoc, wLoc][i] - m(20);
-      ctx.font = `800 ${fit((c || '').toUpperCase(), maxW, fHead, 800)}px ${FF}`;
-      tracked((c || '').toUpperCase(), centros[i], y + hHeader/2 + fHead*0.34, 2, 'center');
-    });
-    y += hHeader;
-
-    filas.forEach((f, i) => {
-      const hFila = m(base.fila);
-      ctx.fillStyle = i % 2 === 0 ? C.grafito2 : 'rgba(35,35,35,0.45)';
-      ctx.fillRect(X, y, ANCHO, hFila);
-
-      const fTxt = Math.max(m(26), 12);
-      ctx.textAlign = 'center';
-      [[f.nombre, wNom, C.blanco, 800], [f.doc, wDoc, C.amarillo, 900], [f.localidad, wLoc, C.gris, 700]]
-        .forEach(([txt, w, color, peso], j) => {
-          const t = (txt || '').toUpperCase();
+      // ---- Línea y Bingo de esta ronda ----
+      r.filas.slice(0, 2).forEach((g, i) => {
+        ctx.fillStyle = i % 2 === 0 ? C.grafito2 : 'rgba(35,35,35,0.45)';
+        ctx.fillRect(X, y, ANCHO, ROW_H);
+        const fTxt = 26;
+        ctx.textAlign = 'center';
+        [
+          [g.tipo, wTipo, C.blanco, 800],
+          [g.carton, wCarton, C.amarillo, 900],
+          [g.ag, wAg, C.gris, 700],
+          [g.localidad, wLoc, C.gris, 700],
+          [fmt(g.premio), wPremio, C.verdeClaro, 900],
+        ].forEach(([val, w, color, peso], j) => {
+          const t = (val || '–').toString().toUpperCase();
           ctx.fillStyle = color;
-          ctx.font = `${peso} ${fit(t, w - m(22), fTxt, peso)}px ${FF}`;
-          ctx.fillText(t, centros[j], y + hFila/2 + fTxt*0.34);
+          ctx.font = `${peso} ${fit(t, w - 16, fTxt, peso)}px ${FF}`;
+          ctx.fillText(t, centros[j], y + ROW_H / 2 + fTxt * 0.34);
         });
-      ctx.textAlign = 'left';
-      y += hFila;
-    });
+        ctx.textAlign = 'left';
+        y += ROW_H;
+      });
 
-    ctx.strokeStyle = C.verde;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(X, TABLA_TOP, ANCHO, y - TABLA_TOP);
+      ctx.strokeStyle = C.verde; ctx.lineWidth = 2;
+      ctx.strokeRect(X, tablaTop, ANCHO, y - tablaTop);
+
+      if (idx < rondas.length - 1) y += GAP_BLOQUES;
+    });
 
     if (E.nota){
       ctx.fillStyle = C.gris;
-      ctx.font = `500 ${Math.max(m(17), 11)}px ${FF}`;
+      ctx.font = `500 17px ${FF}`;
       ctx.textAlign = 'center';
       wrap(E.nota, ANCHO - 40).slice(0, 2)
-        .forEach((ln, i) => ctx.fillText(ln, 540, y + m(32) + i * m(24)));
+        .forEach((ln, i) => ctx.fillText(ln, 540, y + 34 + i * 24));
       ctx.textAlign = 'left';
     }
   },
@@ -2271,30 +2279,19 @@ ${PROMPT_CIERRE}`,
             <input type="text" data-h="plataforma" value="${esc(E.plataforma)}"></div>
         </div>
         <div class="duo" style="margin-top:10px">
-          <div class="campo" style="margin:0"><label>Período del sorteo</label>
-            <input type="text" data-h="periodo" value="${esc(E.periodo)}"></div>
-          <div class="campo" style="margin:0"><label>Premios</label>
-            <input type="text" data-h="premios" value="${esc(E.premios)}"></div>
+          <div class="campo" style="margin:0"><label>Sorteo Nº</label>
+            <input type="text" data-h="sorteo" value="${esc(E.sorteo)}"></div>
+          <div class="campo" style="margin:0"><label>Fecha</label>
+            <input type="text" data-h="fecha" value="${esc(E.fecha)}"></div>
         </div>
         ${selectorLogoHTML(E.logo)}
       </div>
 
       <div class="card" style="margin-top:14px">
-        <h2>Columnas</h2>
-        <div class="duo">
-          ${E.cols.map((c, i) => `
-            <div class="campo" style="margin:0">
-              <input type="text" data-col="${i}" value="${esc(c)}"></div>`).join('')}
-        </div>
-      </div>
-
-      <div class="card" style="margin-top:14px">
-        <h2>Cupones <span id="tbCuenta"></span></h2>
+        <h2>Ganadores <span id="tbCuenta"></span></h2>
         <div id="tbFilas"></div>
-        <button id="tbAgregar">+ Agregar cupón</button>
-        <div class="aviso on" style="background:#2a1e2e;border-color:#5c3a6b;color:#d5a8e8">
-          Vienen datos de ejemplo inventados. Reemplazalos por los del sorteo real antes de publicar.
-        </div>
+        <button id="tbAgregar">+ Agregar ganador</button>
+        <p class="hint">Un renglón por Línea/Bingo de cada ronda — la ronda es la que los agrupa arriba.</p>
       </div>
 
       <div class="card" style="margin-top:14px">
@@ -2306,30 +2303,48 @@ ${PROMPT_CIERRE}`,
     cont.querySelectorAll('[data-h]').forEach(inp => {
       inp.addEventListener('input', e => { E[e.target.dataset.h] = e.target.value; draw(); });
     });
-    cont.querySelectorAll('[data-col]').forEach(inp => {
-      inp.addEventListener('input', e => { E.cols[+e.target.dataset.col] = e.target.value; draw(); });
-    });
     conectarSelectorLogo(cont, this);
     conectarCargaRapida(cont, this);
 
     const filasCont = cont.querySelector('#tbFilas');
     const pintar = () => {
       filasCont.innerHTML = '';
-      cont.querySelector('#tbCuenta').textContent = `· ${E.filas.length}`;
-      E.filas.forEach((f, i) => {
+      cont.querySelector('#tbCuenta').textContent = `· ${E.ganadores.length}`;
+      E.ganadores.forEach((g, i) => {
         const row = document.createElement('div');
-        row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:6px';
+        row.className = 'item';
         row.innerHTML = `
-          <input type="text" placeholder="Apellido y nombre" style="flex:1.6;min-width:0" value="${esc(f.nombre)}" data-f="nombre">
-          <input type="text" placeholder="Documento" style="flex:1;min-width:0" value="${esc(f.doc)}" data-f="doc">
-          <input type="text" placeholder="Localidad" style="flex:1;min-width:0" value="${esc(f.localidad)}" data-f="localidad">
-          <button data-f="borrar" style="padding:6px 8px">×</button>`;
-        ['nombre','doc','localidad'].forEach(k => {
-          row.querySelector(`[data-f=${k}]`).addEventListener('input', e => { f[k] = e.target.value; draw(); });
+          <div class="top">
+            <div class="num">${i + 1}</div>
+            <b>Ronda</b>
+            <input type="text" data-f="ronda" value="${esc(g.ronda)}" style="width:44px;text-align:center;margin:0 8px">
+            <button data-f="borrar" style="margin-left:auto">×</button>
+          </div>
+          <div class="duo">
+            <div class="campo" style="margin:0"><label>Tipo (Línea/Bingo)</label>
+              <input type="text" data-f="tipo" value="${esc(g.tipo)}"></div>
+            <div class="campo" style="margin:0"><label>Cartón</label>
+              <input type="text" data-f="carton" value="${esc(g.carton)}"></div>
+          </div>
+          <div class="duo" style="margin-top:10px">
+            <div class="campo" style="margin:0"><label>Agencia</label>
+              <input type="text" data-f="ag" value="${esc(g.ag)}"></div>
+            <div class="campo" style="margin:0"><label>Localidad</label>
+              <input type="text" data-f="localidad" value="${esc(g.localidad)}"></div>
+          </div>
+          <div class="campo" style="margin-top:10px"><label>Premio (solo números)</label>
+            <input type="text" inputmode="numeric" data-f="premio" value="${esc(g.premio)}">
+            <p class="hint">Sale: <b class="prevPremio">${fmt(g.premio)}</b></p></div>`;
+        ['ronda', 'tipo', 'carton', 'ag', 'localidad', 'premio'].forEach(k => {
+          row.querySelector(`[data-f=${k}]`).addEventListener('input', e => {
+            g[k] = k === 'ronda' ? (Number(e.target.value) || 1) : e.target.value;
+            if (k === 'premio') row.querySelector('.prevPremio').textContent = fmt(g.premio);
+            draw();
+          });
         });
         row.querySelector('[data-f=borrar]').addEventListener('click', () => {
-          if (E.filas.length === 1) return;
-          E.filas.splice(i, 1); pintar(); draw();
+          if (E.ganadores.length === 1) return;
+          E.ganadores.splice(i, 1); pintar(); draw();
         });
         filasCont.appendChild(row);
       });
@@ -2337,7 +2352,7 @@ ${PROMPT_CIERRE}`,
     pintar();
 
     cont.querySelector('#tbAgregar').addEventListener('click', () => {
-      E.filas.push(nuevoCupon()); pintar(); draw();
+      E.ganadores.push(nuevoGanador()); pintar(); draw();
     });
   },
 };
