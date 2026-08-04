@@ -1131,7 +1131,7 @@ function conectarCargaRapida(cont, P){
           headers: { ...HEADERS_SUPABASE, 'content-type': 'application/json', 'x-clave': clave },
           // "turno" solo lo usa Quiniela; en el resto queda undefined y JSON.stringify
           // lo descarta solo, así que no hace falta ramificar por juego acá
-          body: JSON.stringify({ juego: P.jsonJuego, turno: P.estado.turno }),
+          body: JSON.stringify({ juego: P.jsonJuego, turno: P.estado.turnoPedido }),
         });
         const data = await r.json().catch(() => ({}));
         if (r.status === 401){
@@ -2533,6 +2533,9 @@ ${PROMPT_CIERRE}`,
    ========================================================================== */
 
 const QUINIELA_TURNOS = ['LA PREVIA', 'EL PRIMERO', 'MATUTINA', 'VESPERTINA', 'NOCTURNA'];
+// valor especial del selector: no es un turno real, es "traeme el que salió más tarde hoy".
+// El backend resuelve cuál es y devuelve su nombre verdadero, que es el que termina dibujado.
+const QUINIELA_ULTIMO = 'ULTIMO';
 // tonos del extracto oficial: banda clara, texto oscuro encima
 const QUINIELA_TONOS  = ['#EFCF6B', '#87C68A', '#8AD3EA', '#A9AAE0'];
 
@@ -2565,6 +2568,10 @@ const quiniela = {
     titulo: 'RESULTADOS',
     plataforma: 'QUINIELA',
     turno: 'LA PREVIA',
+    // qué turno PEDIRLE al backend, que no es lo mismo que el que se dibuja: por defecto
+    // "el último publicado", así nadie se lleva el de la mañana cuando ya salió el de la
+    // tarde. El nombre real llega en la respuesta y es el que va a la pieza.
+    turnoPedido: QUINIELA_ULTIMO,
     fecha: 'VIERNES 31 JULIO 2026',
     caducidad: '10/08/2026',
     // datos reales del extracto del 31/07/2026, como punto de partida
@@ -2731,14 +2738,16 @@ ${PROMPT_CIERRE}`,
           <div class="campo" style="margin:0"><label>Juego</label>
             <input type="text" data-h="plataforma" value="${esc(E.plataforma)}"></div>
         </div>
-        <div class="campo" style="margin-top:10px"><label>Sorteo del día</label>
+        <div class="campo" style="margin-top:10px"><label>Sorteo a traer</label>
           <select data-turno style="width:100%;background:#111;border:1px solid var(--borde);
             border-radius:7px;color:#fff;padding:8px 10px;font-family:inherit;font-size:13.5px">
+            <option value="${QUINIELA_ULTIMO}"${(E.turnoPedido||'') === QUINIELA_ULTIMO ? ' selected' : ''}>★ El último que haya salido hoy</option>
             ${QUINIELA_TURNOS.map(t =>
-              `<option value="${t}"${t === (E.turno||'').toUpperCase() ? ' selected' : ''}>${t}</option>`).join('')}
+              `<option value="${t}"${t === (E.turnoPedido||'').toUpperCase() ? ' selected' : ''}>${t}</option>`).join('')}
           </select>
-          <p class="hint">Se publica una historia por turno. Si el nombre no es ninguno de estos,
-            escribilo igual en el campo de abajo.</p></div>
+          <p class="hint">Con "el último" no hay que estar pendiente del horario: trae el sorteo
+            más tarde que ya publicó la Lotería y escribe su nombre solo. Elegí uno puntual si
+            querés rehacer la historia de un turno anterior.</p></div>
         <div class="duo" style="margin-top:10px">
           <div class="campo" style="margin:0"><label>Turno (texto libre)</label>
             <input type="text" data-h="turno" value="${esc(E.turno)}"></div>
@@ -2777,10 +2786,15 @@ ${PROMPT_CIERRE}`,
 
     const sel = cont.querySelector('[data-turno]');
     if (sel) sel.addEventListener('change', e => {
-      E.turno = e.target.value;
-      const libre = cont.querySelector('[data-h=turno]');
-      if (libre) libre.value = e.target.value;
-      draw();
+      E.turnoPedido = e.target.value;
+      // "el último" no es un nombre dibujable: el título de la pieza queda como está hasta
+      // que el backend responda con el turno real. Elegir uno puntual sí lo escribe ya.
+      if (e.target.value !== QUINIELA_ULTIMO){
+        E.turno = e.target.value;
+        const libre = cont.querySelector('[data-h=turno]');
+        if (libre) libre.value = e.target.value;
+        draw();
+      }
     });
 
     conectarSelectorLogo(cont, this);
