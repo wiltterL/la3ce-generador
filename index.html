@@ -794,10 +794,12 @@ function drawCarton(bloques, top, bottom, cfg){
   const CN = colorNumActual();
 
   bloques.forEach((b, i) => {
+    // el rótulo va centrado como los números: acá las filas están centradas (no alineadas
+    // a un margen como en Quini), y una etiqueta pegada a la izquierda quedaba suelta
     const fLab = Math.max(m(22), 11);
     ctx.fillStyle = CN.etiqueta;
     ctx.font = `700 ${fit((b.nombre || '').toUpperCase(), 800, fLab, 700)}px ${FF}`;
-    tracked((b.nombre || '').toUpperCase(), 76, y + m(24), 4, 'left');
+    tracked((b.nombre || '').toUpperCase(), 540, y + m(24), 4, 'center');
     y += m(label);
 
     if (esTexto[i]){
@@ -2940,7 +2942,14 @@ ${PROMPT_CIERRE}`,
     // círculos más grandes y menos columnas (pedido 01/08/2026): antes 13 columnas de 60 px con
     // número a 32 — ahora 10 columnas de ~85 px con número a 44, un 37% más grande. Las tiradas
     // de LÍNEA (b.capsula === false) no gastan grilla: liberan el alto que paga este agrandado
-    drawCarton(E.bloques, 534, 1660, { columnas:8, gap:10, fontNum:56, label:36, entre:24, lineaFont:38, lineaLineH:54 });
+    // La banda baja hasta 1712 (pegada a la leyenda, que arranca en 1736): Wiltter avisó que
+    // estas piezas se mandan sobre todo por WhatsApp, donde no existe la barra de "Enviar
+    // mensaje" que en Instagram tapa los últimos 250 px. Se gana alto real para las bolillas.
+    //
+    // 9 columnas, no 8: con el reparto parejo igual salen filas de 8 y 9 —o sea, se ve casi
+    // idéntico— pero el bingo de 41 entra en 5 filas en vez de 6, y esa fila de menos es lo
+    // que paga el salto de tamaño. Bajar a 8 columnas las haría MÁS chicas, no más grandes.
+    drawCarton(E.bloques, 520, 1712, { columnas:9, gap:10, fontNum:56, label:34, entre:18, lineaFont:38, lineaLineH:50 });
   },
 
   panel(cont){
