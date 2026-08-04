@@ -178,6 +178,17 @@
         </div>
         <p class="hint">La imagen se recorta para llenar la historia. El oscurecido es lo que
           mantiene legibles los textos y la leyenda legal encima.</p>
+
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid #2c2c2c">
+          <div style="display:flex;gap:6px">
+            <input type="text" id="fondoGuardarNombre" placeholder="Nombre (ej. local Roca)" style="flex:1;min-width:0">
+            <button id="fondoGuardarBtn">★ Guardar</button>
+          </div>
+          <p class="hint" style="margin-top:6px">Queda guardada en ESTA computadora (hasta 5),
+            lista para elegir del desplegable de arriba. No se comparte con otras compus.</p>
+          <div id="fondosGuardadosAviso" class="aviso"></div>
+          <div id="fondosGuardadosLista" style="margin-top:8px"></div>
+        </div>
       </div>
 
       <div class="campo" style="margin-top:12px">
@@ -188,6 +199,14 @@
         </select>
       </div>
       <p class="hint">Las dos versiones del lockup LA33 + LA3CE, para comparar en contexto.</p>
+    </div>
+
+    <div class="card">
+      <h2>Color de los números</h2>
+      <select id="colorNumeros"></select>
+      <p class="hint">Vale para las cajas y círculos de números de todas las plantillas (Quini 6,
+        Loto Resultados, Telekino, Telebingo números y las 20 cifras de Quiniela). La primera
+        posición de Quiniela sigue resaltada en amarillo aparte, y las tablas no cambian.</p>
     </div>
 
     <div class="card">
@@ -225,8 +244,14 @@ const HEAD  = { x:70, y:280, w:940, h:160, r:28 };          // barra verde
 // lockup LA33 + LA3CE. Ancho para que "La3ce" se lea: a 104px cuadrado no entraba.
 // Centrado vertical en la barra (280..440): ya no hay etiqueta debajo que lo corra.
 const CHIP  = { x:753, y:297, w:223, h:126, r:22 };
-const GRID  = { x:70, y:474, w:940, h:1042, gap:34 };        // grilla de ganadores
-const LEGAL = { y:1552, alto:108 };                          // banda legal protegida
+// grilla de ganadores — alto estirado junto con la bajada de LEGAL (ver más abajo), de
+// 474+1042=1516 a 474+1186=1660
+const GRID  = { x:70, y:474, w:940, h:1186, gap:34 };
+// banda legal protegida — bajada a pedido de Wiltter (01/08/2026) al medio entre su posición
+// original y el borde de abajo, para liberar espacio a los bloques de contenido. Ojo: los
+// últimos SAFE px (250, ver más abajo) son la zona que tapa la barra de "Enviar mensaje" de
+// Instagram, y esta banda cae adentro — es una decisión tomada a sabiendas, no un error.
+const LEGAL = { y:1736, alto:108 };
 
 const $  = id => document.getElementById(id);
 const cv = $('cv'), ctx = cv.getContext('2d');
@@ -368,8 +393,73 @@ function conectarDrop(dz, cb){
 }
 
 /* ==========================================================================
+   FONDOS GUARDADOS — pedido de las chicas el 01/08/2026: poder subir una foto una vez
+   y tenerla lista en el desplegable después. Se guardan en el localStorage de ESTA
+   computadora — cada una tiene las suyas, no se comparten ni hace falta subir el archivo
+   de nuevo para sumar una.
+   ========================================================================== */
+
+const FONDOS_GUARDADOS_KEY = 'la3ce_fondos_guardados';
+const FONDOS_GUARDADOS_MAX = 5;      // el navegador da poco espacio por sitio (~5 MB)
+
+function leerFondosGuardados(){
+  try { return JSON.parse(localStorage.getItem(FONDOS_GUARDADOS_KEY) || '[]'); }
+  catch { return []; }
+}
+
+// recorta la imagen igual que drawFondo (mismo "cover") y la recomprime a JPEG — si se
+// guardara tal cual como llegó, una sola foto podría comerse todo el espacio disponible
+function recortarParaGuardar(img){
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const cc = c.getContext('2d');
+  const k = Math.max(W / img.naturalWidth, H / img.naturalHeight);
+  const dw = img.naturalWidth * k, dh = img.naturalHeight * k;
+  cc.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+  return c.toDataURL('image/jpeg', 0.82);
+}
+
+function guardarFondoActual(nombre){
+  if (!app.fondoImg) return { ok:false, error:'Primero subí una foto.' };
+  const lista = leerFondosGuardados();
+  if (lista.length >= FONDOS_GUARDADOS_MAX){
+    return { ok:false, error:`Ya hay ${FONDOS_GUARDADOS_MAX} fondos guardados en esta computadora — borrá alguno de la lista antes de sumar otro.` };
+  }
+  const item = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    nombre: (nombre || '').trim() || `Fondo ${lista.length + 1}`,
+    data: recortarParaGuardar(app.fondoImg),
+  };
+  try {
+    localStorage.setItem(FONDOS_GUARDADOS_KEY, JSON.stringify([...lista, item]));
+  } catch {
+    // típicamente QuotaExceededError: el navegador se quedó sin espacio para este sitio
+    return { ok:false, error:'No entró: el navegador se quedó sin espacio guardado en este sitio. Borrá algún fondo guardado y probá de nuevo.' };
+  }
+  return { ok:true, item };
+}
+
+function borrarFondoGuardado(id){
+  localStorage.setItem(FONDOS_GUARDADOS_KEY, JSON.stringify(leerFondosGuardados().filter(g => g.id !== id)));
+}
+
+/* ==========================================================================
    CHROME LA3CE — idéntico en toda plantilla
    ========================================================================== */
+
+// Color de las cajas/círculos de número — pedido de las chicas el 01/08/2026, global para
+// toda la suite (Quini 6, Loto Resultados, Telekino, Telebingo números, las 20 cifras de
+// Quiniela). Cada opción define los tres colores juntos porque no son independientes: el
+// negro necesitaría texto negro sobre una caja clara, si no no se lee — por eso "negro" es
+// la única variante que además da vuelta el relleno.
+const COLORES_NUM = {
+  verde:    { nombre: 'Verde (el de siempre)', texto: '#FFFFFF', borde: '#0E6E4B', relleno: '#232323' },
+  amarillo: { nombre: 'Amarillo',               texto: '#E8B923', borde: '#E8B923', relleno: '#232323' },
+  blanco:   { nombre: 'Blanco',                 texto: '#FFFFFF', borde: '#FFFFFF', relleno: '#232323' },
+  rojo:     { nombre: 'Rojo',                   texto: '#E5484D', borde: '#E5484D', relleno: '#232323' },
+  negro:    { nombre: 'Negro',                  texto: '#101010', borde: '#101010', relleno: '#EDEDED' },
+};
+const colorNumActual = () => COLORES_NUM[app.colorNumeros] || COLORES_NUM.verde;
 
 /* Fondos de la pieza.
    Cada preset declara TODO lo que se apoya directo sobre el fondo, porque al
@@ -548,13 +638,19 @@ function drawPieLegal(texto){
   // sobre una imagen, la leyenda puede caer encima de una zona clara y desaparecer.
   // Es obligatoria por Res. 446/2025, así que lleva su propio velo y no depende
   // de cuánto oscurecimiento general haya elegido la persona.
+  //
+  // Se desvanece en las DOS puntas (entra de a poco arriba, se disuelve de a poco abajo) en
+  // vez de cortar de golpe: un borde duro contra una foto clara se nota como un error de
+  // recorte. Con degradado no hay corte posible, sea cual sea la foto de fondo.
   if (app.fondo === 'imagen' && app.fondoImg){
-    const v = ctx.createLinearGradient(0, LEGAL.y - 46, 0, LEGAL.y + LEGAL.alto + 30);
+    const arriba = LEGAL.y - 96, abajo = LEGAL.y + LEGAL.alto + 96;
+    const v = ctx.createLinearGradient(0, arriba, 0, abajo);
     v.addColorStop(0,    'rgba(12,12,12,0)');
-    v.addColorStop(0.28, 'rgba(12,12,12,0.72)');
-    v.addColorStop(1,    'rgba(12,12,12,0.86)');
+    v.addColorStop(0.30, 'rgba(12,12,12,0.82)');
+    v.addColorStop(0.70, 'rgba(12,12,12,0.82)');
+    v.addColorStop(1,    'rgba(12,12,12,0)');
     ctx.fillStyle = v;
-    ctx.fillRect(0, LEGAL.y - 46, W, LEGAL.alto + 76);
+    ctx.fillRect(0, arriba, W, abajo - arriba);
   }
 
   const ag = ctx.createLinearGradient(70, 0, 1010, 0);
@@ -591,20 +687,21 @@ function drawGrupoNumeros(y0, nombre, nums, cfg){
   ctx.font = `700 ${fit((nombre || '').toUpperCase(), 800, 22, 700)}px ${FF}`;
   tracked((nombre || '').toUpperCase(), 76, y0 + 24, 4, 'left');
 
+  const CN = colorNumActual();
   parseNumeros(nums, cantidad).forEach((n, j) => {
     const col = j % columnas, fila = Math.floor(j / columnas);
     const x = X0 + col * (chipW + gap);
     const y = y0 + 40 + fila * (chipH + gap);
 
-    ctx.fillStyle = C.grafito2;
+    ctx.fillStyle = CN.relleno;
     rr(x, y, chipW, chipH, 18);
     ctx.fill();
-    ctx.strokeStyle = n ? C.verde : '#2c2c2c';
+    ctx.strokeStyle = n ? CN.borde : '#2c2c2c';
     ctx.lineWidth = 2.5;
     rr(x, y, chipW, chipH, 18);
     ctx.stroke();
 
-    ctx.fillStyle = n ? C.blanco : '#3a3a3a';
+    ctx.fillStyle = n ? CN.texto : '#3a3a3a';
     ctx.font = `900 ${fontNum}px ${FF}`;
     ctx.textAlign = 'center';
     ctx.fillText(n || '–', x + chipW/2, y + chipH/2 + fontNum*0.35);
@@ -614,29 +711,53 @@ function drawGrupoNumeros(y0, nombre, nums, cfg){
   return 40 + filas * chipH + (filas - 1) * gap;
 }
 
-// varios bloques de números de cantidad LIBRE, apilados dentro de una banda.
-// Telebingo sortea más de cien entre línea y bingo, así que la grilla de cantidad fija
-// de Quini no sirve: acá el alto se calcula con los números que realmente haya y, si no
-// entran, todo el conjunto se achica junto. Nunca puede pasarse de `bottom`.
+// varios bloques de números de cantidad LIBRE, apilados dentro de una banda. Telebingo
+// sortea más de cien entre línea y bingo, así que la grilla de cantidad fija de Quini no
+// sirve: acá el alto se calcula con los números que realmente haya y, si no entran, todo
+// el conjunto se achica junto. Nunca puede pasarse de `bottom`.
+//
+// Cada bloque puede ir en dos formas (pedido de las chicas el 01/08/2026, para que las
+// cápsulas grandes de Bingo tengan lugar): `capsula:false` lo dibuja como una sola línea de
+// texto con guiones largos entre número y número — así queda LÍNEA, que son pocos números y
+// no necesita cápsula — y libera el alto que antes ocupaba en grilla. El resto (o cualquier
+// bloque sin el campo, por compatibilidad) sigue en cápsulas — ahora círculos.
 function drawCarton(bloques, top, bottom, cfg){
-  const { columnas = 13, chipH = 60, gap = 8, fontNum = 32, label = 36, entre = 20 } = cfg || {};
+  const {
+    columnas = 13, gap = 8, fontNum = 32, label = 36, entre = 20,
+    lineaFont = 34, lineaLineH = 46,
+  } = cfg || {};
   const X0 = 70, ANCHO = 940;
-  const chipW = (ANCHO - (columnas - 1) * gap) / columnas;
+  // el diámetro de la cápsula sale de repartir el ancho entero entre las columnas — para que
+  // un círculo siga siendo círculo, el paso horizontal y el vertical achican juntos, así que
+  // no hay un "alto de cápsula" separado del ancho como había antes con los cuadrados
+  const diamBase = (ANCHO - (columnas - 1) * gap) / columnas;
 
   const listas = bloques.map(b => parseTodos(b.nums));
-  const filas  = listas.map(l => Math.ceil(l.length / columnas));
-  const altoBloque = f => f > 0 ? f * chipH + (f - 1) * gap : 0;
+  const esTexto = bloques.map(b => b.capsula === false);
+  const filas = listas.map((l, i) => esTexto[i] ? 0 : Math.ceil(l.length / columnas));
 
-  const natural = filas.reduce((a, f) => a + label + altoBloque(f), 0)
+  // cuántas líneas ocupa un bloque de texto a una escala dada — depende del tamaño de
+  // letra, así que hay que medirlo con ese font puesto, no se puede calcular de antemano
+  const lineasTexto = (i, k) => {
+    if (!esTexto[i]) return 0;
+    if (!listas[i].length) return 1;
+    ctx.font = `800 ${Math.max(Math.round(lineaFont * k), 10)}px ${FF}`;
+    return wrap(listas[i].join(' — '), ANCHO).length;
+  };
+
+  const cuerpoBloque = (i, k) => esTexto[i]
+    ? lineasTexto(i, k) * Math.round(lineaLineH * k)
+    : (filas[i] > 0 ? filas[i] * Math.round(diamBase * k) + (filas[i] - 1) * Math.round(gap * k) : 0);
+
+  const natural = bloques.reduce((a, _, i) => a + label + cuerpoBloque(i, 1), 0)
                 + Math.max(0, bloques.length - 1) * entre;
   const disponible = bottom - top;
 
   // el alto real con una escala dada, ya redondeado: es lo único que sirve para decidir,
   // porque redondear cada medida hacia arriba suma píxeles que la cuenta teórica no ve
   const altoReal = k => {
-    const h = Math.round(k*chipH), g = Math.round(k*gap);
-    const lab = Math.round(k*label), ent = Math.round(k*entre);
-    return filas.reduce((a, f) => a + lab + (f > 0 ? f*h + (f-1)*g : 0), 0)
+    const lab = Math.round(k * label), ent = Math.round(k * entre);
+    return bloques.reduce((a, _, i) => a + lab + cuerpoBloque(i, k), 0)
          + Math.max(0, bloques.length - 1) * ent;
   };
 
@@ -646,6 +767,7 @@ function drawCarton(bloques, top, bottom, cfg){
   const m = k => Math.round(k * s);
 
   let y = top + Math.max(0, (disponible - altoReal(s)) / 2);
+  const CN = colorNumActual();
 
   bloques.forEach((b, i) => {
     const fLab = Math.max(m(22), 11);
@@ -654,22 +776,35 @@ function drawCarton(bloques, top, bottom, cfg){
     tracked((b.nombre || '').toUpperCase(), 76, y + m(24), 4, 'left');
     y += m(label);
 
-    const h = m(chipH), g = m(gap), fNum = Math.max(m(fontNum), 10), r = Math.max(m(12), 4);
-    listas[i].forEach((n, j) => {
-      const x  = X0 + (j % columnas) * (chipW + gap);
-      const yy = y + Math.floor(j / columnas) * (h + g);
-      ctx.fillStyle = C.grafito2;
-      rr(x, yy, chipW, h, r); ctx.fill();
-      ctx.strokeStyle = C.verde; ctx.lineWidth = 2;
-      rr(x, yy, chipW, h, r); ctx.stroke();
-      ctx.fillStyle = C.blanco;
-      ctx.font = `900 ${fNum}px ${FF}`;
-      ctx.textAlign = 'center';
-      ctx.fillText(n, x + chipW/2, yy + h/2 + fNum*0.35);
+    if (esTexto[i]){
+      const fNum = Math.max(m(lineaFont), 10);
+      const lh = Math.max(m(lineaLineH), 14);
+      ctx.font = `800 ${fNum}px ${FF}`;
+      ctx.fillStyle = listas[i].length ? CN.texto : '#5a5a5a';
       ctx.textAlign = 'left';
-    });
-
-    y += (filas[i] > 0 ? filas[i] * h + (filas[i] - 1) * g : 0);
+      wrap(listas[i].length ? listas[i].join(' — ') : '–', ANCHO)
+        .forEach((ln, li) => ctx.fillText(ln, X0, y + li * lh + fNum * 0.78));
+      y += lineasTexto(i, s) * lh;
+    } else {
+      const d = m(diamBase), g = m(gap), fNum = Math.max(m(fontNum), 10);
+      listas[i].forEach((n, j) => {
+        const x  = X0 + (j % columnas) * (d + g);
+        const yy = y + Math.floor(j / columnas) * (d + g);
+        const cx = x + d / 2, cy = yy + d / 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, d / 2, 0, Math.PI * 2);
+        ctx.fillStyle = CN.relleno;
+        ctx.fill();
+        ctx.strokeStyle = CN.borde; ctx.lineWidth = Math.max(m(2.5), 1.5);
+        ctx.stroke();
+        ctx.fillStyle = CN.texto;
+        ctx.font = `900 ${fNum}px ${FF}`;
+        ctx.textAlign = 'center';
+        ctx.fillText(n, cx, cy + fNum * 0.34);
+        ctx.textAlign = 'left';
+      });
+      y += (filas[i] > 0 ? filas[i] * d + (filas[i] - 1) * g : 0);
+    }
     if (i < bloques.length - 1) y += m(entre);
   });
 }
@@ -866,13 +1001,23 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const HEADERS_SUPABASE = { authorization: 'Bearer ' + SUPABASE_ANON_KEY };
 let backendDisponible = false;
 
+// Devuelve la clave guardada, o la pide. Si la piden y cancelan (o la dejan vacía), NO se
+// guarda nada — guardar '' dejaría a la persona trabada para siempre en "Clave incorrecta",
+// sin ninguna forma de volver a que se la pregunte. En ese caso se devuelve null y quien
+// llama debe abortar el pedido sin llamar al servidor.
 function claveAcceso(){
-  let k = localStorage.getItem(CLAVE_STORAGE_KEY);
-  if (k == null){
-    k = prompt('Clave de acceso de la herramienta (te la paso una sola vez; queda guardada en este navegador):') || '';
-    localStorage.setItem(CLAVE_STORAGE_KEY, k);
-  }
+  const guardada = localStorage.getItem(CLAVE_STORAGE_KEY);
+  if (guardada) return guardada;
+  const k = (prompt('Clave de acceso de la herramienta (te la paso una sola vez; queda guardada en este navegador):') || '').trim();
+  if (!k) return null;
+  localStorage.setItem(CLAVE_STORAGE_KEY, k);
   return k;
+}
+
+// borra la clave guardada — se llama cuando el servidor la rechaza (401), así el próximo
+// clic la vuelve a pedir en vez de repetir para siempre la misma clave mala
+function olvidarClave(){
+  localStorage.removeItem(CLAVE_STORAGE_KEY);
 }
 
 async function detectarBackend(){
@@ -969,17 +1114,33 @@ function conectarCargaRapida(cont, P){
   if (btnAuto && P.jsonJuego){
     btnAuto.addEventListener('click', async () => {
       const avisarAuto = hacerAvisador(cont.querySelector('[data-cr=msgauto]'));
+
+      const clave = claveAcceso();
+      if (clave == null){
+        // canceló el prompt o lo dejó vacío: no se guardó nada, así que no tiene sentido
+        // llamar al servidor con una clave que sabemos que va a fallar
+        avisarAuto('Hace falta la clave de acceso para traer los datos. Probá de nuevo.', false);
+        return;
+      }
+
       btnAuto.disabled = true;
       avisarAuto('Buscando el último sorteo…', true);
       try {
         const r = await fetch(API_BASE + '/resultados', {
           method: 'POST',
-          headers: { ...HEADERS_SUPABASE, 'content-type': 'application/json', 'x-clave': claveAcceso() },
+          headers: { ...HEADERS_SUPABASE, 'content-type': 'application/json', 'x-clave': clave },
           // "turno" solo lo usa Quiniela; en el resto queda undefined y JSON.stringify
           // lo descarta solo, así que no hace falta ramificar por juego acá
           body: JSON.stringify({ juego: P.jsonJuego, turno: P.estado.turno }),
         });
         const data = await r.json().catch(() => ({}));
+        if (r.status === 401){
+          // la clave guardada está mal (o alguien apretó Cancelar antes y quedó ''):
+          // se borra para que el próximo clic la vuelva a pedir, en vez de repetir para
+          // siempre el mismo pedido condenado a fallar
+          olvidarClave();
+          throw new Error('Clave incorrecta. Apretá de nuevo y te la vuelve a pedir.');
+        }
         if (!r.ok) throw new Error(data.error || 'El servidor no respondió bien.');
 
         // mismo camino que el pegado manual: aplicar() muta o lanza, sin dejar nada a medias
@@ -1466,7 +1627,7 @@ const quini = {
       drawGrupoNumeros(QUINI_Y0 + i * QUINI_PASO, g.nombre, g.nums, GRUPO_6);
     });
 
-    drawPanelPozo(1222, 'PRÓXIMO SORTEO', E.proxFecha, 'POZO ESTIMADO',
+    drawPanelPozo(1382, 'PRÓXIMO SORTEO', E.proxFecha, 'POZO ESTIMADO',
       (fmt(E.pozo) + ' ' + (E.sufijo || '')).trim());
   },
 
@@ -1602,7 +1763,7 @@ const lotoResultados = {
       drawGrupoNumeros(QUINI_Y0 + i * QUINI_PASO, g.nombre, g.nums, GRUPO_6);
     });
 
-    drawPanelPozo(1222, 'PRÓXIMO SORTEO', E.proxFecha, 'POZO ACUMULADO EN JUEGO',
+    drawPanelPozo(1382, 'PRÓXIMO SORTEO', E.proxFecha, 'POZO ACUMULADO EN JUEGO',
       (fmt(E.pozo) + ' ' + (E.sufijo || '')).trim());
   },
 
@@ -1766,7 +1927,7 @@ ${PROMPT_CIERRE}`,
 
   draw(){
     const E = this.estado;
-    const TOP = 534, BOTTOM = 1500;                // banda disponible antes del pie legal
+    const TOP = 534, BOTTOM = 1660;                // banda disponible antes del pie legal
     const disponible = BOTTOM - TOP;
 
     // ---- chip de fecha / nº de sorteo ----
@@ -2019,7 +2180,7 @@ const telekino = {
       drawGrupoNumeros(TK_Y0 + i * TK_PASO, g.nombre, g.nums, GRUPO_15);
     });
 
-    drawPanelPozo(1222, 'PRÓXIMO SORTEO', E.proxFecha, 'POZO ESTIMADO A LOS 15 ACIERTOS',
+    drawPanelPozo(1382, 'PRÓXIMO SORTEO', E.proxFecha, 'POZO ESTIMADO A LOS 15 ACIERTOS',
       (fmt(E.pozo) + ' ' + (E.sufijo || '')).trim());
   },
 
@@ -2196,7 +2357,10 @@ ${PROMPT_CIERRE}`,
     })();
     const cols = ['TIPO', 'CARTÓN', 'AG.', 'LOCALIDAD', 'PREMIO'];
 
-    const LABEL_H = 54, GAP_LT = 14, HEADER_H = 60, ROW_H = 64, GAP_BLOQUES = 46;
+    // el contenido es siempre fijo (2 rondas × 2 filas) y ya no necesita compartir la banda con
+    // nada más abajo — la banda legal bajó a y1736, así que hay más aire y se lo damos entre
+    // rondas en vez de dejarlo vacío
+    const LABEL_H = 58, GAP_LT = 16, HEADER_H = 66, ROW_H = 72, GAP_BLOQUES = 76;
     let y = TOP;
 
     rondas.forEach((r, idx) => {
@@ -2219,7 +2383,7 @@ ${PROMPT_CIERRE}`,
       ctx.fillStyle = hg;
       rr(X, y, ANCHO, HEADER_H, 14); ctx.fill();
       ctx.fillStyle = C.blanco;
-      const fHead = 21;
+      const fHead = 23;
       cols.forEach((c, i) => {
         ctx.font = `800 ${fit(c, anchos[i] - 16, fHead, 800)}px ${FF}`;
         tracked(c, centros[i], y + HEADER_H / 2 + fHead * 0.34, 2, 'center');
@@ -2231,7 +2395,7 @@ ${PROMPT_CIERRE}`,
       r.filas.slice(0, 2).forEach((g, i) => {
         ctx.fillStyle = i % 2 === 0 ? C.grafito2 : 'rgba(35,35,35,0.45)';
         ctx.fillRect(X, y, ANCHO, ROW_H);
-        const fTxt = 26;
+        const fTxt = 29;
         ctx.textAlign = 'center';
         [
           [g.tipo, wTipo, C.blanco, 800],
@@ -2494,7 +2658,7 @@ ${PROMPT_CIERRE}`,
     ctx.font = `900 ${fit(tu, 860, 34, 900)}px ${FF}`;
     tracked(tu, 540, 552, 7, 'center');
 
-    const HEAD_Y = 572, HEAD_H = 62, ROWS_Y = 642, BOTTOM = 1500;
+    const HEAD_Y = 572, HEAD_H = 62, ROWS_Y = 642, BOTTOM = 1660;
     const rowH = (BOTTOM - ROWS_Y) / 20;
 
     L.forEach((lo, i) => {
@@ -2521,6 +2685,7 @@ ${PROMPT_CIERRE}`,
       tracked(lo.codigo || '', x + colW/2, HEAD_Y + 49, 0.5, 'center');
 
       // ---- 20 posiciones ----
+      const CN = colorNumActual();
       parseCifras(lo.nums, 20, 4).forEach((n, j) => {
         const y = ROWS_Y + j * rowH;
         const primera = j === 0;
@@ -2528,6 +2693,13 @@ ${PROMPT_CIERRE}`,
         ctx.fillStyle = j % 2 ? '#1C1C1C' : C.grafito2;
         rr(x, y, colW, rowH - 3, 8);
         ctx.fill();
+        // el recuadro solo se pinta en las que ya tienen número — vacías quedan lisas,
+        // igual que en el resto de la suite
+        if (n && !primera){
+          ctx.strokeStyle = CN.borde; ctx.lineWidth = 1.5;
+          rr(x, y, colW, rowH - 3, 8);
+          ctx.stroke();
+        }
 
         ctx.fillStyle = primera ? C.amarillo : '#6E6E6E';
         ctx.font = `700 ${primera ? 17 : 15}px ${FF}`;
@@ -2535,7 +2707,9 @@ ${PROMPT_CIERRE}`,
         ctx.fillText(String(j + 1), x + 12, y + rowH/2 + 5);
 
         const fN = primera ? 34 : 29;
-        ctx.fillStyle = n ? (primera ? C.amarillo : C.blanco) : '#3a3a3a';
+        // la primera posición sigue en amarillo y más grande a propósito: es la cifra que
+        // la gente busca primero. El color elegido pinta las otras 19.
+        ctx.fillStyle = n ? (primera ? C.amarillo : CN.texto) : '#3a3a3a';
         ctx.font = `900 ${fN}px ${FF}`;
         ctx.textAlign = 'center';
         ctx.fillText(n || '––––', x + colW/2 + 11, y + rowH/2 + fN*0.35);
@@ -2632,6 +2806,11 @@ ${PROMPT_CIERRE}`,
    grilla de Quini, así que va en formato cartón con drawCarton().
    ========================================================================== */
 
+// una tirada va sin cápsula (línea de texto con guiones) si su nombre dice "LÍNEA" —
+// se usa para deducir `capsula` al cargar datos nuevos; queda editable en el panel por si
+// algún sorteo la nombra distinto
+const esTiradaLinea = nombre => /L[IÍ]NEA/i.test(nombre || '');
+
 const telebingoNumeros = {
   nombre: 'Telebingo números',
   archivo: 'la3ce-telebingo-numeros',
@@ -2641,12 +2820,13 @@ const telebingoNumeros = {
     plataforma: 'PATAGONIA TELEBINGO',
     sorteo: '458',
     fecha: '26/07/2026',
-    // datos reales del extracto del 26/07/2026, como punto de partida
+    // datos reales del extracto del 26/07/2026, como punto de partida. capsula:false = línea
+    // de texto con guiones (pedido 01/08/2026); capsula:true = círculos, como Bingo
     bloques: [
-      { nombre:'VUELTA 1 · LÍNEA', nums:'35 48 54 55 77 56 74 64 80 07 10 52' },
-      { nombre:'VUELTA 1 · BINGO', nums:'50 13 36 57 03 15 59 67 62 42 21 17 45 30 26 86 19 38 85 60 23 46 78 47 08 05 72 43 32 63 24 79 71 02 90 65 69 31 84' },
-      { nombre:'VUELTA 2 · LÍNEA', nums:'72 42 67 40 61 10 13 34 24 08 25' },
-      { nombre:'VUELTA 2 · BINGO', nums:'44 23 66 78 05 46 54 06 70 01 60 27 21 71 28 04 43 88 41 58 89 38 52 83 77 87 32 63 50 33 80 56 81 47 20 73 64 75 02 65 17' },
+      { nombre:'VUELTA 1 · LÍNEA', nums:'35 48 54 55 77 56 74 64 80 07 10 52', capsula:false },
+      { nombre:'VUELTA 1 · BINGO', nums:'50 13 36 57 03 15 59 67 62 42 21 17 45 30 26 86 19 38 85 60 23 46 78 47 08 05 72 43 32 63 24 79 71 02 90 65 69 31 84', capsula:true },
+      { nombre:'VUELTA 2 · LÍNEA', nums:'72 42 67 40 61 10 13 34 24 08 25', capsula:false },
+      { nombre:'VUELTA 2 · BINGO', nums:'44 23 66 78 05 46 54 06 70 01 60 27 21 71 28 04 43 88 41 58 89 38 52 83 77 87 32 63 50 33 80 56 81 47 20 73 64 75 02 65 17', capsula:true },
     ],
     logo: 'telebingo',
     stickers: [ nuevoLogoSticker('telebingo') ], stkSel: -1,
@@ -2675,7 +2855,10 @@ ${PROMPT_CIERRE}`,
 
       const bl = d.bloques
         .filter(b => b && txt(b.nums))
-        .map(b => ({ nombre: txt(b.nombre) || 'TIRADA', nums: txt(b.nums) }));
+        .map(b => {
+          const nombre = txt(b.nombre) || 'TIRADA';
+          return { nombre, nums: txt(b.nums), capsula: !esTiradaLinea(nombre) };
+        });
 
       if (!bl.length) throw new Error('Ninguna tirada traía números. No cambié nada.');
       E.bloques = bl;
@@ -2693,7 +2876,10 @@ ${PROMPT_CIERRE}`,
       [(E.fecha || '').toUpperCase(), C.amarillo],
     ], { font:24, sp:4, pad:56, min:170 });
 
-    drawCarton(E.bloques, 534, 1500, { columnas:13, chipH:60, gap:8, fontNum:32, label:36, entre:20 });
+    // círculos más grandes y menos columnas (pedido 01/08/2026): antes 13 columnas de 60 px con
+    // número a 32 — ahora 10 columnas de ~85 px con número a 44, un 37% más grande. Las tiradas
+    // de LÍNEA (b.capsula === false) no gastan grilla: liberan el alto que paga este agrandado
+    drawCarton(E.bloques, 534, 1660, { columnas:10, gap:10, fontNum:44, label:36, entre:24, lineaFont:36, lineaLineH:50 });
   },
 
   panel(cont){
@@ -2729,9 +2915,12 @@ ${PROMPT_CIERRE}`,
             <div class="campo"><label>Los números, separados por espacio</label>
               <textarea data-b="${i}" data-f="nums" rows="3" class="mono">${esc(b.nums)}</textarea>
               <p class="hint">Cargados: <b class="prev">${cuenta(b)}</b> números</p></div>
+            <label class="check"><input type="checkbox" data-b="${i}" data-f="capsula"
+              ${b.capsula !== false ? 'checked' : ''}> En círculos (destildá para línea de
+              texto con guiones, como LÍNEA)</label>
           </div>`).join('')}
-        <p class="hint">No hay tope: van en filas de 13 y, si son muchos, todo el conjunto se
-          achica junto para no tocar nunca la leyenda legal.</p>
+        <p class="hint">No hay tope en Bingo: va en filas de 10 círculos y, si son muchos, todo
+          el conjunto se achica junto para no tocar nunca la leyenda legal.</p>
       </div>`;
 
     cont.querySelectorAll('[data-h]').forEach(inp => {
@@ -2741,10 +2930,12 @@ ${PROMPT_CIERRE}`,
     conectarCargaRapida(cont, this);
 
     cont.querySelectorAll('[data-b]').forEach(inp => {
-      inp.addEventListener('input', e => {
+      const ev = inp.type === 'checkbox' ? 'change' : 'input';
+      inp.addEventListener(ev, e => {
         const b = E.bloques[+e.target.dataset.b];
-        b[e.target.dataset.f] = e.target.value;
-        if (e.target.dataset.f === 'nums'){
+        const campo = e.target.dataset.f;
+        b[campo] = campo === 'capsula' ? e.target.checked : e.target.value;
+        if (campo === 'nums'){
           e.target.parentNode.querySelector('.prev').textContent = parseTodos(b.nums).length;
         }
         draw();
@@ -2762,7 +2953,7 @@ const PLANTILLAS = {
   telebingo,
 };
 const app = { actual:'ganadores', zonas:false, marca:'A',
-              fondo:'verde', fondoImg:null, oscurecer:0.58 };
+              fondo:'verde', fondoImg:null, oscurecer:0.58, colorNumeros:'verde' };
 const plantilla = () => PLANTILLAS[app.actual];
 
 function draw(exportando){
@@ -2896,13 +3087,75 @@ $('restaurar').addEventListener('click', () => { $('legal').value = LEGAL_DEF; d
 $('zonas').addEventListener('change', e => { app.zonas = e.target.checked; draw(); });
 $('marca').addEventListener('change', e => { app.marca = e.target.value; draw(); });
 
-// selector de fondo: se arma desde el registro, así sumar un preset es una línea
-$('fondo').innerHTML = Object.entries(FONDOS)
-  .map(([k, F]) => `<option value="${k}">${F.nombre}</option>`).join('');
-$('fondo').value = app.fondo;
+// selector de fondo: se arma desde el registro de presets MÁS los fondos guardados en esta
+// computadora, así que hay que poder rearmarlo cada vez que la lista de guardados cambia
+function renderSelectorFondo(valorElegido){
+  const guardados = leerFondosGuardados();
+  let html = Object.entries(FONDOS)
+    .map(([k, F]) => `<option value="${k}">${F.nombre}</option>`).join('');
+  if (guardados.length){
+    html += `<optgroup label="★ Fondos guardados en esta compu">` +
+      guardados.map(g => `<option value="guardado:${g.id}">★ ${esc(g.nombre)}</option>`).join('') +
+      `</optgroup>`;
+  }
+  $('fondo').innerHTML = html;
+  $('fondo').value = valorElegido || app.fondo;
+}
+renderSelectorFondo(app.fondo);
+
+function cargarFondoGuardado(item){
+  const im = new Image();
+  im.onload = () => {
+    app.fondoImg = im;
+    app.fondo = 'imagen';
+    $('fondoImagen').style.display = 'block';
+    $('fondoDrop').classList.add('ok');
+    $('fondoDrop').textContent = `✓ "${item.nombre}" — clic para cambiarla por otra foto`;
+    draw();
+  };
+  im.src = item.data;
+}
+
+function pintarListaFondosGuardados(){
+  const cont = $('fondosGuardadosLista');
+  const guardados = leerFondosGuardados();
+  if (!guardados.length){ cont.innerHTML = ''; return; }
+  cont.innerHTML = guardados.map(g => `
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">★ ${esc(g.nombre)}</span>
+      <button data-usar="${g.id}" style="padding:5px 9px">Usar</button>
+      <button data-borrar="${g.id}" style="padding:5px 9px">×</button>
+    </div>`).join('');
+  cont.querySelectorAll('[data-usar]').forEach(b => b.addEventListener('click', () => {
+    const item = leerFondosGuardados().find(g => g.id === b.dataset.usar);
+    if (item){ cargarFondoGuardado(item); renderSelectorFondo(`guardado:${item.id}`); }
+  }));
+  cont.querySelectorAll('[data-borrar]').forEach(b => b.addEventListener('click', () => {
+    borrarFondoGuardado(b.dataset.borrar);
+    pintarListaFondosGuardados();
+    renderSelectorFondo(app.fondo);
+  }));
+}
+pintarListaFondosGuardados();
+
 $('fondo').addEventListener('change', e => {
-  app.fondo = e.target.value;
+  const v = e.target.value;
+  if (v.startsWith('guardado:')){
+    const item = leerFondosGuardados().find(g => g.id === v.slice('guardado:'.length));
+    if (item) cargarFondoGuardado(item);
+    return;
+  }
+  app.fondo = v;
   $('fondoImagen').style.display = app.fondo === 'imagen' ? 'block' : 'none';
+  draw();
+});
+
+// selector de color de números: mismo patrón que el de fondo, armado desde el registro
+$('colorNumeros').innerHTML = Object.entries(COLORES_NUM)
+  .map(([k, c]) => `<option value="${k}">${c.nombre}</option>`).join('');
+$('colorNumeros').value = app.colorNumeros;
+$('colorNumeros').addEventListener('change', e => {
+  app.colorNumeros = e.target.value;
   draw();
 });
 
@@ -2912,6 +3165,23 @@ conectarDrop($('fondoDrop'), f => leerImagen(f, im => {
   $('fondoDrop').textContent = '✓ imagen cargada — clic para cambiarla';
   draw();
 }));
+
+// guardar la foto actual como opción — mismo avisador chico que usa "cargar datos rápido"
+$('fondoGuardarBtn').addEventListener('click', () => {
+  const aviso = $('fondosGuardadosAviso');
+  const r = guardarFondoActual($('fondoGuardarNombre').value);
+  aviso.classList.add('on');
+  if (r.ok){
+    aviso.style.background = '#123020'; aviso.style.borderColor = '#1d6b45'; aviso.style.color = '#5fd39b';
+    aviso.textContent = `Guardada como "${r.item.nombre}".`;
+    $('fondoGuardarNombre').value = '';
+    pintarListaFondosGuardados();
+    renderSelectorFondo(`guardado:${r.item.id}`);
+  } else {
+    aviso.style.background = '#3a2410'; aviso.style.borderColor = '#7a4d15'; aviso.style.color = '#e8b923';
+    aviso.textContent = r.error;
+  }
+});
 
 $('oscurecer').addEventListener('input', e => {
   app.oscurecer = e.target.value / 100;
