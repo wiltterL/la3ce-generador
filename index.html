@@ -449,15 +449,20 @@ function borrarFondoGuardado(id){
 
 // Color de las cajas/círculos de número — pedido de las chicas el 01/08/2026, global para
 // toda la suite (Quini 6, Loto Resultados, Telekino, Telebingo números, las 20 cifras de
-// Quiniela). Cada opción define los tres colores juntos porque no son independientes: el
-// negro necesitaría texto negro sobre una caja clara, si no no se lee — por eso "negro" es
-// la única variante que además da vuelta el relleno.
+// Quiniela). Cada opción define los colores juntos porque no son independientes: el negro
+// necesitaría texto negro sobre una caja clara, si no no se lee — por eso "negro" es la
+// única variante que además da vuelta el relleno.
+//
+// "etiqueta" es el rótulo de cada grupo ("TRADICIONAL PRIMER SORTEO", "VUELTA 1 · BINGO"):
+// acompaña al color elegido en vez de quedarse verde. OJO: ese rótulo se apoya directo
+// sobre el fondo oscuro de la pieza, no sobre la caja — por eso en la variante negra va
+// claro y no negro, que sobre grafito sería invisible.
 const COLORES_NUM = {
-  verde:    { nombre: 'Verde (el de siempre)', texto: '#FFFFFF', borde: '#0E6E4B', relleno: '#232323' },
-  amarillo: { nombre: 'Amarillo',               texto: '#E8B923', borde: '#E8B923', relleno: '#232323' },
-  blanco:   { nombre: 'Blanco',                 texto: '#FFFFFF', borde: '#FFFFFF', relleno: '#232323' },
-  rojo:     { nombre: 'Rojo',                   texto: '#E5484D', borde: '#E5484D', relleno: '#232323' },
-  negro:    { nombre: 'Negro',                  texto: '#101010', borde: '#101010', relleno: '#EDEDED' },
+  verde:    { nombre: 'Verde (el de siempre)', texto: '#FFFFFF', borde: '#0E6E4B', relleno: '#232323', etiqueta: '#14915F' },
+  amarillo: { nombre: 'Amarillo',               texto: '#E8B923', borde: '#E8B923', relleno: '#232323', etiqueta: '#E8B923' },
+  blanco:   { nombre: 'Blanco',                 texto: '#FFFFFF', borde: '#FFFFFF', relleno: '#232323', etiqueta: '#FFFFFF' },
+  rojo:     { nombre: 'Rojo',                   texto: '#E5484D', borde: '#E5484D', relleno: '#232323', etiqueta: '#E5484D' },
+  negro:    { nombre: 'Negro',                  texto: '#101010', borde: '#101010', relleno: '#EDEDED', etiqueta: '#EDEDED' },
 };
 const colorNumActual = () => COLORES_NUM[app.colorNumeros] || COLORES_NUM.verde;
 
@@ -683,11 +688,11 @@ function drawGrupoNumeros(y0, nombre, nums, cfg){
   const chipW = (ANCHO - (columnas - 1) * gap) / columnas;
   const filas = Math.ceil(cantidad / columnas);
 
-  ctx.fillStyle = C.verdeClaro;
+  const CN = colorNumActual();
+  ctx.fillStyle = CN.etiqueta;
   ctx.font = `700 ${fit((nombre || '').toUpperCase(), 800, 22, 700)}px ${FF}`;
   tracked((nombre || '').toUpperCase(), 76, y0 + 24, 4, 'left');
 
-  const CN = colorNumActual();
   parseNumeros(nums, cantidad).forEach((n, j) => {
     const col = j % columnas, fila = Math.floor(j / columnas);
     const x = X0 + col * (chipW + gap);
@@ -734,19 +739,38 @@ function drawCarton(bloques, top, bottom, cfg){
 
   const listas = bloques.map(b => parseTodos(b.nums));
   const esTexto = bloques.map(b => b.capsula === false);
-  const filas = listas.map((l, i) => esTexto[i] ? 0 : Math.ceil(l.length / columnas));
 
-  // cuántas líneas ocupa un bloque de texto a una escala dada — depende del tamaño de
-  // letra, así que hay que medirlo con ese font puesto, no se puede calcular de antemano
-  const lineasTexto = (i, k) => {
-    if (!esTexto[i]) return 0;
-    if (!listas[i].length) return 1;
+  // Reparte n números en filas de a lo sumo `columnas`, lo más parejo posible: 41 en 6 filas
+  // sale 7·7·7·7·7·6 en vez de 8·8·8·8·8·1. Ese "1" solo abajo era lo que arruinaba la pieza
+  // — el ojo lo lee como un error de armado, no como el último número que salió.
+  const repartir = n => {
+    if (n <= 0) return [];
+    const nFilas = Math.ceil(n / columnas);
+    const base = Math.floor(n / nFilas), sobra = n % nFilas;
+    return Array.from({ length: nFilas }, (_, i) => base + (i < sobra ? 1 : 0));
+  };
+  const repartos = listas.map((l, i) => esTexto[i] ? [] : repartir(l.length));
+  const filas = repartos.map(r => r.length);
+
+  // los bloques de texto (las tiradas de LÍNEA) van partidos al medio en dos renglones
+  // centrados: 12 números salen 6 y 6, y 11 salen 6 y 5. Antes se dejaba envolver solo y
+  // quedaba un «— 52» colgando en el segundo renglón.
+  //
+  // Cada mitad igual pasa por wrap(): si una tirada trae muchos más números de lo habitual,
+  // la mitad no entra a lo ancho y hay que dejarla partir en más renglones. Sin esto el
+  // texto se dibuja fuera de la pieza y se pierde por los costados.
+  const renglonesTexto = (i, k) => {
+    const l = listas[i];
+    if (!l.length) return ['–'];
     ctx.font = `800 ${Math.max(Math.round(lineaFont * k), 10)}px ${FF}`;
-    return wrap(listas[i].join(' — '), ANCHO).length;
+    if (l.length < 4) return wrap(l.join('  —  '), ANCHO);
+    const corte = Math.ceil(l.length / 2);
+    return [l.slice(0, corte), l.slice(corte)]
+      .flatMap(mitad => wrap(mitad.join('  —  '), ANCHO));
   };
 
   const cuerpoBloque = (i, k) => esTexto[i]
-    ? lineasTexto(i, k) * Math.round(lineaLineH * k)
+    ? renglonesTexto(i, k).length * Math.round(lineaLineH * k)
     : (filas[i] > 0 ? filas[i] * Math.round(diamBase * k) + (filas[i] - 1) * Math.round(gap * k) : 0);
 
   const natural = bloques.reduce((a, _, i) => a + label + cuerpoBloque(i, 1), 0)
@@ -771,7 +795,7 @@ function drawCarton(bloques, top, bottom, cfg){
 
   bloques.forEach((b, i) => {
     const fLab = Math.max(m(22), 11);
-    ctx.fillStyle = C.verdeClaro;
+    ctx.fillStyle = CN.etiqueta;
     ctx.font = `700 ${fit((b.nombre || '').toUpperCase(), 800, fLab, 700)}px ${FF}`;
     tracked((b.nombre || '').toUpperCase(), 76, y + m(24), 4, 'left');
     y += m(label);
@@ -779,29 +803,36 @@ function drawCarton(bloques, top, bottom, cfg){
     if (esTexto[i]){
       const fNum = Math.max(m(lineaFont), 10);
       const lh = Math.max(m(lineaLineH), 14);
+      const rens = renglonesTexto(i, s);
       ctx.font = `800 ${fNum}px ${FF}`;
       ctx.fillStyle = listas[i].length ? CN.texto : '#5a5a5a';
+      ctx.textAlign = 'center';
+      rens.forEach((ln, li) => ctx.fillText(ln, 540, y + li * lh + fNum * 0.78));
       ctx.textAlign = 'left';
-      wrap(listas[i].length ? listas[i].join(' — ') : '–', ANCHO)
-        .forEach((ln, li) => ctx.fillText(ln, X0, y + li * lh + fNum * 0.78));
-      y += lineasTexto(i, s) * lh;
+      y += rens.length * lh;
     } else {
       const d = m(diamBase), g = m(gap), fNum = Math.max(m(fontNum), 10);
-      listas[i].forEach((n, j) => {
-        const x  = X0 + (j % columnas) * (d + g);
-        const yy = y + Math.floor(j / columnas) * (d + g);
-        const cx = x + d / 2, cy = yy + d / 2;
-        ctx.beginPath();
-        ctx.arc(cx, cy, d / 2, 0, Math.PI * 2);
-        ctx.fillStyle = CN.relleno;
-        ctx.fill();
-        ctx.strokeStyle = CN.borde; ctx.lineWidth = Math.max(m(2.5), 1.5);
-        ctx.stroke();
-        ctx.fillStyle = CN.texto;
-        ctx.font = `900 ${fNum}px ${FF}`;
-        ctx.textAlign = 'center';
-        ctx.fillText(n, cx, cy + fNum * 0.34);
-        ctx.textAlign = 'left';
+      let k = 0;
+      repartos[i].forEach((cuantos, fila) => {
+        // cada fila va centrada sobre el ancho de la pieza: con el reparto parejo las filas
+        // tienen distinto largo, y alineadas a la izquierda se leerían como una escalera
+        const anchoFila = cuantos * d + (cuantos - 1) * g;
+        const inicio = X0 + (ANCHO - anchoFila) / 2;
+        for (let c = 0; c < cuantos; c++, k++){
+          const cx = inicio + c * (d + g) + d / 2;
+          const cy = y + fila * (d + g) + d / 2;
+          ctx.beginPath();
+          ctx.arc(cx, cy, d / 2, 0, Math.PI * 2);
+          ctx.fillStyle = CN.relleno;
+          ctx.fill();
+          ctx.strokeStyle = CN.borde; ctx.lineWidth = Math.max(m(2.5), 1.5);
+          ctx.stroke();
+          ctx.fillStyle = CN.texto;
+          ctx.font = `900 ${fNum}px ${FF}`;
+          ctx.textAlign = 'center';
+          ctx.fillText(listas[i][k], cx, cy + fNum * 0.34);
+          ctx.textAlign = 'left';
+        }
       });
       y += (filas[i] > 0 ? filas[i] * d + (filas[i] - 1) * g : 0);
     }
@@ -2330,7 +2361,8 @@ ${PROMPT_CIERRE}`,
 
   draw(){
     const E = this.estado;
-    const TOP = 560, X = 70, ANCHO = 940;
+    // BOTTOM deja lugar para la nota al pie, que se dibuja después de la última tabla
+    const TOP = 560, BOTTOM = 1590, X = 70, ANCHO = 940;
 
     drawChipsDuo(458, [
       ['SORTEO Nº ' + (E.sorteo || '–'), C.blanco],
@@ -2357,33 +2389,48 @@ ${PROMPT_CIERRE}`,
     })();
     const cols = ['TIPO', 'CARTÓN', 'AG.', 'LOCALIDAD', 'PREMIO'];
 
-    // el contenido es siempre fijo (2 rondas × 2 filas) y ya no necesita compartir la banda con
-    // nada más abajo — la banda legal bajó a y1736, así que hay más aire y se lo damos entre
-    // rondas en vez de dejarlo vacío
-    const LABEL_H = 58, GAP_LT = 16, HEADER_H = 66, ROW_H = 72, GAP_BLOQUES = 76;
+    // Cada ronda dibuja TODAS las filas que tenga: un sorteo puede repartir más de un
+    // premio por tirada (el 04/08/2026 hubo 4 por ronda) y antes se cortaban en silencio.
+    // Como el alto ya no es fijo, todo el bloque se achica junto si no entra — mismo
+    // principio que Loto Ganadores y el cartón de Telebingo.
+    const BASE = { label:58, gapLt:16, header:66, row:72, entre:76 };
+    const totalFilas = rondas.reduce((a, r) => a + r.filas.length, 0);
+    const altoCon = k =>
+      rondas.length * (Math.round(k*BASE.label) + Math.round(k*BASE.gapLt) + Math.round(k*BASE.header))
+      + totalFilas * Math.round(k*BASE.row)
+      + Math.max(0, rondas.length - 1) * Math.round(k*BASE.entre);
+
+    const disponible = BOTTOM - TOP;
+    let s = Math.min(1, disponible / Math.max(altoCon(1), 1));
+    while (s > 0.2 && altoCon(s) > disponible) s -= 0.005;
+    const m = k => Math.round(k * s);
+    const LABEL_H = m(BASE.label), GAP_LT = m(BASE.gapLt),
+          HEADER_H = m(BASE.header), ROW_H = m(BASE.row), GAP_BLOQUES = m(BASE.entre);
+
     let y = TOP;
 
     rondas.forEach((r, idx) => {
       // ---- chip de la ronda ----
       const label = (r.n === 1 ? '1ª RONDA' : r.n === 2 ? '2ª RONDA' : r.n + 'ª RONDA');
-      ctx.font = `800 22px ${FF}`;
-      const wLabel = Math.max([...label].reduce((a, ch) => a + ctx.measureText(ch).width + 2, 0) + 50, 160);
+      const fLab = Math.max(m(22), 11);
+      ctx.font = `800 ${fLab}px ${FF}`;
+      const wLabel = Math.max([...label].reduce((a, ch) => a + ctx.measureText(ch).width + 2, 0) + m(50), m(160));
       const lx = 540 - wLabel / 2;
       ctx.fillStyle = C.grafito2;
       rr(lx, y, wLabel, LABEL_H, LABEL_H / 2); ctx.fill();
       ctx.strokeStyle = C.amarillo; ctx.lineWidth = 2;
       rr(lx, y, wLabel, LABEL_H, LABEL_H / 2); ctx.stroke();
       ctx.fillStyle = C.amarillo;
-      tracked(label, 540, y + LABEL_H / 2 + 22 * 0.36, 2, 'center');
+      tracked(label, 540, y + LABEL_H / 2 + fLab * 0.36, 2, 'center');
       y += LABEL_H + GAP_LT;
 
       // ---- encabezado de la tabla ----
       const hg = ctx.createLinearGradient(X, 0, X + ANCHO, 0);
       hg.addColorStop(0, C.verde); hg.addColorStop(1, C.verdeClaro);
       ctx.fillStyle = hg;
-      rr(X, y, ANCHO, HEADER_H, 14); ctx.fill();
+      rr(X, y, ANCHO, HEADER_H, m(14)); ctx.fill();
       ctx.fillStyle = C.blanco;
-      const fHead = 23;
+      const fHead = Math.max(m(23), 10);
       cols.forEach((c, i) => {
         ctx.font = `800 ${fit(c, anchos[i] - 16, fHead, 800)}px ${FF}`;
         tracked(c, centros[i], y + HEADER_H / 2 + fHead * 0.34, 2, 'center');
@@ -2391,11 +2438,11 @@ ${PROMPT_CIERRE}`,
       const tablaTop = y;
       y += HEADER_H;
 
-      // ---- Línea y Bingo de esta ronda ----
-      r.filas.slice(0, 2).forEach((g, i) => {
+      // ---- todos los ganadores de esta ronda ----
+      r.filas.forEach((g, i) => {
         ctx.fillStyle = i % 2 === 0 ? C.grafito2 : 'rgba(35,35,35,0.45)';
         ctx.fillRect(X, y, ANCHO, ROW_H);
-        const fTxt = 29;
+        const fTxt = Math.max(m(29), 11);
         ctx.textAlign = 'center';
         [
           [g.tipo, wTipo, C.blanco, 800],
@@ -2661,7 +2708,7 @@ ${PROMPT_CIERRE}`,
 
     // el turno es lo que distingue una pieza de la otra en un mismo día: va grande
     const tu = (E.turno || '').toUpperCase();
-    ctx.fillStyle = C.verdeClaro;
+    ctx.fillStyle = colorNumActual().etiqueta;
     ctx.font = `900 ${fit(tu, 860, 34, 900)}px ${FF}`;
     tracked(tu, 540, 552, 7, 'center');
 
@@ -2893,7 +2940,7 @@ ${PROMPT_CIERRE}`,
     // círculos más grandes y menos columnas (pedido 01/08/2026): antes 13 columnas de 60 px con
     // número a 32 — ahora 10 columnas de ~85 px con número a 44, un 37% más grande. Las tiradas
     // de LÍNEA (b.capsula === false) no gastan grilla: liberan el alto que paga este agrandado
-    drawCarton(E.bloques, 534, 1660, { columnas:10, gap:10, fontNum:44, label:36, entre:24, lineaFont:36, lineaLineH:50 });
+    drawCarton(E.bloques, 534, 1660, { columnas:8, gap:10, fontNum:56, label:36, entre:24, lineaFont:38, lineaLineH:54 });
   },
 
   panel(cont){
