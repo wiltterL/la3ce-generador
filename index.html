@@ -53,6 +53,24 @@
   .tabs .prox{opacity:.4;cursor:default;font-style:italic}
   .tabs .prox:hover{background:#1e1e1e;color:#999}
 
+  /* barra de "última edición": lo guardado de ESTA plantilla, fuera de la pieza.
+     Se pone ámbar cuando lo guardado no es de hoy — es la alarma que evita publicar
+     el sorteo de ayer sin darse cuenta. */
+  .guardado{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    background:var(--panel);border:1px solid var(--borde);border-radius:10px;
+    padding:9px 14px;margin:-8px 0 20px;font-size:12.5px;color:#8f8f8f;
+  }
+  .guardado b{color:#c9c9c9;font-weight:700}
+  .guardado.viejo{background:#2a2109;border-color:#7a5f15;color:#e8b923}
+  .guardado.viejo b{color:#ffd24a}
+  .guardado button{
+    margin-left:auto;background:#1e1e1e;border:1px solid var(--borde);color:#999;
+    padding:6px 13px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;
+  }
+  .guardado button:hover{background:#2c2c2c;color:#ddd}
+  .guardado.vacio button{display:none}
+
   .wrap{display:flex;gap:30px;align-items:flex-start;flex-wrap:wrap}
   .controles{width:430px;flex:0 0 430px;display:flex;flex-direction:column;gap:14px}
   .preview{position:sticky;top:24px;align-self:flex-start}
@@ -143,6 +161,11 @@
 </header>
 
 <div class="tabs" id="tabs"></div>
+
+<div class="guardado" id="guardado">
+  <span id="guardadoTexto"></span>
+  <button id="guardadoBorrar" type="button">Empezar de cero</button>
+</div>
 
 <div class="wrap">
 
@@ -441,6 +464,149 @@ function guardarFondoActual(nombre){
 
 function borrarFondoGuardado(id){
   localStorage.setItem(FONDOS_GUARDADOS_KEY, JSON.stringify(leerFondosGuardados().filter(g => g.id !== id)));
+}
+
+/* ==========================================================================
+   AUTOGUARDADO — pedido de Wiltter el 04/08/2026: que lo último cargado en cada
+   plantilla siga ahí al recargar, cambiar de página, cerrar el navegador o volver
+   al día siguiente. Vive en el localStorage de ESA computadora.
+
+   Qué NO se guarda, a propósito: las imágenes (el arte de cada juego en Ganadores,
+   los stickers subidos a mano). Una sola foto de historia pesa ~300 KB y el navegador
+   da ~5 MB por sitio compartidos con los fondos guardados — con tres o cuatro piezas
+   se llenaría y el guardado empezaría a fallar seguido. Los datos escritos, en cambio,
+   son unos pocos KB por plantilla.
+   ========================================================================== */
+
+const AUTOGUARDADO_KEY = 'la3ce_autoguardado';
+const AUTOGUARDADO_V = 1;
+
+// las claves del estado que NO viajan al localStorage: llevan objetos Image adentro
+// (no son serializables) y son justamente las pesadas
+const NO_GUARDAR = new Set(['stickers', 'stkSel', 'sel', 'juegos']);
+
+function leerAutoguardado(){
+  try {
+    const g = JSON.parse(localStorage.getItem(AUTOGUARDADO_KEY) || 'null');
+    return (g && g.v === AUTOGUARDADO_V) ? g : null;
+  } catch { return null; }
+}
+
+let guardarPendiente = null;
+let ultimaEdicion = {};   // id de plantilla -> timestamp
+
+// se llama desde draw(), que corre en cada tecla y en cada arrastre — por eso va
+// demorado: sin esto se escribiría en el disco decenas de veces por segundo
+function programarGuardado(){
+  clearTimeout(guardarPendiente);
+  guardarPendiente = setTimeout(guardarAhora, 700);
+}
+
+function guardarAhora(){
+  const prev = leerAutoguardado();
+  const plantillas = (prev && prev.plantillas) || {};
+
+  const P = plantilla();
+  const limpio = {};
+  Object.entries(P.estado).forEach(([k, v]) => { if (!NO_GUARDAR.has(k)) limpio[k] = v; });
+
+  // La fecha de "última edición" solo se toca si los datos REALMENTE cambiaron. draw()
+  // corre también al abrir la página, al cambiar de pestaña y al seleccionar un sticker;
+  // sin esta comparación, abrir la herramienta ya marcaría todo como editado hoy y
+  // borraría el aviso de "esto es de ayer", que es justo lo que lo hace útil.
+  //
+  // Y si de esta plantilla no había nada guardado, se compara contra los datos de
+  // fábrica: abrir la herramienta y no tocar nada no puede contar como una edición.
+  const antes = plantillas[app.actual] === undefined ? undefined : JSON.stringify(plantillas[app.actual]);
+  const ahora = JSON.stringify(limpio);
+  const fabrica = ESTADOS_DE_FABRICA[app.actual] && JSON.stringify(ESTADOS_DE_FABRICA[app.actual]);
+  const cambio = antes === undefined ? (!!fabrica && ahora !== fabrica) : (antes !== ahora);
+
+  plantillas[app.actual] = limpio;
+  ultimaEdicion = { ...(prev && prev.ultimaEdicion), ...ultimaEdicion };
+  if (cambio) ultimaEdicion[app.actual] = Date.now();
+
+  try {
+    localStorage.setItem(AUTOGUARDADO_KEY, JSON.stringify({
+      v: AUTOGUARDADO_V,
+      plantillas,
+      ultimaEdicion,
+      // el aspecto es global, no por plantilla
+      app: { fondo: app.fondo, marca: app.marca, colorNumeros: app.colorNumeros, oscurecer: app.oscurecer },
+      legal: $('legal') ? $('legal').value : '',
+    }));
+  } catch {
+    // quota llena: no rompemos nada, simplemente esta vez no se guardó
+  }
+  if (cambio) pintarBarraGuardado();
+}
+
+// vuelca lo guardado sobre los estados de arranque. Solo pisa las claves que existen
+// en el estado original: si mañana se agrega un campo a una plantilla, lo guardado
+// viejo no lo borra ni mete basura.
+function restaurarAutoguardado(){
+  const g = leerAutoguardado();
+  if (!g) return;
+  ultimaEdicion = g.ultimaEdicion || {};
+
+  Object.entries(g.plantillas || {}).forEach(([id, datos]) => {
+    const P = PLANTILLAS[id];
+    if (!P || !datos) return;
+    Object.entries(datos).forEach(([k, v]) => {
+      if (NO_GUARDAR.has(k)) return;
+      if (!(k in P.estado)) return;
+      P.estado[k] = v;
+    });
+  });
+
+  if (g.app){
+    // "imagen" depende de una foto suelta que no se restaura sola, así que se vuelve al
+    // preset verde en vez de quedar en negro. Los fondos guardados ("guardado:…") sí se
+    // pueden recuperar: la foto vive en el localStorage, se carga más abajo en el arranque.
+    const f = g.app.fondo;
+    app.fondo = f === 'imagen' ? 'verde' : (f || 'verde');
+    app.marca = g.app.marca || app.marca;
+    app.colorNumeros = g.app.colorNumeros || app.colorNumeros;
+    if (typeof g.app.oscurecer === 'number') app.oscurecer = g.app.oscurecer;
+  }
+  if (typeof g.legal === 'string' && g.legal.trim() && $('legal')) $('legal').value = g.legal;
+}
+
+function borrarAutoguardadoDe(id){
+  const g = leerAutoguardado();
+  if (!g) return;
+  delete (g.plantillas || {})[id];
+  delete (g.ultimaEdicion || {})[id];
+  ultimaEdicion = g.ultimaEdicion || {};
+  localStorage.setItem(AUTOGUARDADO_KEY, JSON.stringify(g));
+}
+
+function textoDesdeCuando(ts){
+  const d = new Date(ts), ahora = new Date();
+  const hh = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  const mismoDia = d.toDateString() === ahora.toDateString();
+  const ayer = new Date(ahora); ayer.setDate(ayer.getDate() - 1);
+  if (mismoDia) return { txt: `hoy ${hh}`, viejo: false };
+  if (d.toDateString() === ayer.toDateString()) return { txt: `ayer ${hh}`, viejo: true };
+  const f = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+  return { txt: `${f} ${hh}`, viejo: true };
+}
+
+function pintarBarraGuardado(){
+  const barra = $('guardado'), txt = $('guardadoTexto');
+  if (!barra || !txt) return;
+  const ts = ultimaEdicion[app.actual];
+  barra.classList.remove('viejo', 'vacio');
+  if (!ts){
+    txt.innerHTML = 'Todavía no hay nada guardado de esta plantilla — lo que cargues queda solo en esta computadora.';
+    barra.classList.add('vacio');
+    return;
+  }
+  const { txt: cuando, viejo } = textoDesdeCuando(ts);
+  txt.innerHTML = viejo
+    ? `⚠ Última edición: <b>${cuando}</b> — ojo, no es de hoy. Revisá que los datos sean del sorteo que querés publicar.`
+    : `Última edición: <b>${cuando}</b>. Queda guardado en esta computadora.`;
+  if (viejo) barra.classList.add('viejo');
 }
 
 /* ==========================================================================
@@ -3035,6 +3201,8 @@ function draw(exportando){
   drawPieLegal($('legal').value);
   drawStickers(P, exportando);
   if (app.zonas && !exportando) drawZonasMuertas();
+  // el dibujo de exportación es el mismo contenido sin guías: no cuenta como edición
+  if (!exportando) programarGuardado();
 }
 
 function renderTabs(){
@@ -3045,11 +3213,16 @@ function renderTabs(){
     b.textContent = P.nombre;
     if (id === app.actual) b.className = 'on';
     b.addEventListener('click', () => {
+      // guarda lo de la plantilla que se está dejando ANTES de cambiar de actual,
+      // si no el guardado demorado la escribiría bajo el id de la nueva
+      clearTimeout(guardarPendiente);
+      guardarAhora();
       app.actual = id;
       renderTabs();
       P.panel($('panelPlantilla'));
       renderStickers();
       draw();
+      pintarBarraGuardado();
     });
     cont.appendChild(b);
   });
@@ -3311,10 +3484,54 @@ function respaldo(url, texto){
  wordLa33, wordLa3ce,
  logoNeuquina, logoRionegrina, logoCiudad, logoProvincia].forEach(im => im.onload = draw);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+
+// Copia de los estados de fábrica ANTES de volcar lo guardado: es a esto a lo que
+// vuelve "Empezar de cero". Los stickers no se copian (llevan objetos Image), y no
+// hace falta: el logo de plataforma se rearma solo desde estado.logo.
+const ESTADOS_DE_FABRICA = {};
+Object.entries(PLANTILLAS).forEach(([id, P]) => {
+  const copia = {};
+  Object.entries(P.estado).forEach(([k, v]) => {
+    if (NO_GUARDAR.has(k)) return;
+    copia[k] = JSON.parse(JSON.stringify(v));
+  });
+  ESTADOS_DE_FABRICA[id] = copia;
+});
+
+restaurarAutoguardado();
+
+// los desplegables de aspecto ya se habían armado leyendo `app` ANTES de restaurar, así
+// que hay que volver a sincronizarlos o mostrarían un valor y se dibujaría otro
+$('colorNumeros').value = app.colorNumeros;
+$('marca').value = app.marca;
+$('oscurecer').value = Math.round(app.oscurecer * 100);
+$('oscurecer').nextElementSibling.textContent = Math.round(app.oscurecer * 100) + '%';
+renderSelectorFondo(app.fondo);
+$('fondoImagen').style.display = app.fondo === 'imagen' ? 'block' : 'none';
+// si lo guardado era un fondo propio, se vuelve a cargar la foto desde el localStorage
+if (String(app.fondo).startsWith('guardado:')){
+  const item = leerFondosGuardados().find(g => g.id === app.fondo.slice('guardado:'.length));
+  if (item) cargarFondoGuardado(item); else app.fondo = 'verde';
+}
+
+$('guardadoBorrar').addEventListener('click', () => {
+  const P = plantilla();
+  const fabrica = ESTADOS_DE_FABRICA[app.actual];
+  if (!fabrica) return;
+  if (!confirm('¿Volver esta plantilla a los datos de ejemplo? Se pierde lo que tengas cargado acá.')) return;
+  Object.entries(fabrica).forEach(([k, v]) => { P.estado[k] = JSON.parse(JSON.stringify(v)); });
+  borrarAutoguardadoDe(app.actual);
+  P.panel($('panelPlantilla'));
+  renderStickers();
+  draw();
+  pintarBarraGuardado();
+});
+
 renderTabs();
 plantilla().panel($('panelPlantilla'));
 renderStickers();
 draw();
+pintarBarraGuardado();
 detectarBackend();
 
 })();
