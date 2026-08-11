@@ -1559,12 +1559,13 @@ const ganadores = {
   estado: {
     titulo: 'GANADORES DE HOY',
     plataforma: 'BETSUR',
-    // datos reales de las piezas oficiales, como punto de partida
+    // Datos de ejemplo, a propósito imposibles de confundir con reales (ver la nota sobre
+    // los datos de fábrica más arriba): montos de puros unos y nombres que se anuncian.
     items: [
-      nuevoJuego('FIREBIRD SPIRIT', '3570050'),
-      nuevoJuego('TRUE GRIT REDEMPTION', '1688040'),
-      nuevoJuego('BURNING CHILLI X', '2190000'),
-      nuevoJuego('DAS XBOOT II', '1069200'),
+      nuevoJuego('JUEGO DE EJEMPLO 1', '1111111'),
+      nuevoJuego('JUEGO DE EJEMPLO 2', '1111111'),
+      nuevoJuego('JUEGO DE EJEMPLO 3', '1111111'),
+      nuevoJuego('JUEGO DE EJEMPLO 4', '1111111'),
     ],
     sel: 0,
     logo: 'betsur',
@@ -1789,15 +1790,15 @@ const quini = {
   estado: {
     titulo: 'NÚMEROS SORTEADOS',
     plataforma: 'QUINI 6',
-    fecha: 'SORTEO DEL 26/7',
+    fecha: 'DATOS DE EJEMPLO',
     grupos: [
-      { nombre:'TRADICIONAL PRIMER SORTEO', nums:'08 09 12 21 28 37' },
-      { nombre:'LA SEGUNDA DEL QUINI',      nums:'00 01 03 04 05 22' },
-      { nombre:'LA REVANCHA',               nums:'03 05 08 22 25 45' },
-      { nombre:'EL QUINI QUE SIEMPRE SALE', nums:'06 10 13 40 42 43' },
+      { nombre:'TRADICIONAL PRIMER SORTEO', nums:'00 01 10 11 00 01' },
+      { nombre:'LA SEGUNDA DEL QUINI',      nums:'00 01 10 11 00 01' },
+      { nombre:'LA REVANCHA',               nums:'00 01 10 11 00 01' },
+      { nombre:'EL QUINI QUE SIEMPRE SALE', nums:'00 01 10 11 00 01' },
     ],
-    proxFecha: 'MIÉRCOLES 29/7',
-    pozo: '10150',
+    proxFecha: 'EJEMPLO',
+    pozo: '11111',
     sufijo: 'MILLONES',
     logo: 'quini',
     stickers: [ nuevoLogoSticker('quini') ], stkSel: -1,
@@ -1918,16 +1919,16 @@ const lotoResultados = {
   estado: {
     titulo: 'RESULTADOS DEL SORTEO',
     plataforma: 'LOTO PLUS',
-    fecha: 'SORTEO Nº 3903',
-    numeroPlus: '06',
+    fecha: 'DATOS DE EJEMPLO',
+    numeroPlus: '00',
     grupos: [
-      { nombre:'TRADICIONAL', nums:'00 13 18 31 33 45' },
-      { nombre:'MATCH',       nums:'05 10 11 13 28 43' },
-      { nombre:'DESQUITE',    nums:'03 07 19 22 25 41' },
-      { nombre:'SALE O SALE', nums:'07 08 18 21 22 35' },
+      { nombre:'TRADICIONAL', nums:'00 01 10 11 00 01' },
+      { nombre:'MATCH',       nums:'00 01 10 11 00 01' },
+      { nombre:'DESQUITE',    nums:'00 01 10 11 00 01' },
+      { nombre:'SALE O SALE', nums:'00 01 10 11 00 01' },
     ],
-    proxFecha: 'PRÓXIMO SORTEO 29/07',
-    pozo: '15955000000',
+    proxFecha: 'EJEMPLO',
+    pozo: '11111000000',
     sufijo: '',
     logo: 'loto',
     stickers: [ nuevoLogoSticker('loto') ], stkSel: -1,
@@ -2054,26 +2055,26 @@ const lotoGanadores = {
   estado: {
     titulo: 'GANADORES DEL SORTEO',
     plataforma: 'LOTO PLUS',
-    fecha: 'SORTEO Nº 3903',
+    fecha: 'DATOS DE EJEMPLO',
     categorias: [
       { nombre:'TRADICIONAL', tipo:'POZO', filas:[
-          { aciertos:'6', monto:'3030889778', ganadores:'VACANTE' },
-          { aciertos:'5', monto:'19324780',   ganadores:'4' },
-          { aciertos:'4', monto:'3864956',    ganadores:'269' },
+          { aciertos:'6', monto:'1111111111', ganadores:'EJEMPLO' },
+          { aciertos:'5', monto:'11111111',   ganadores:'0' },
+          { aciertos:'4', monto:'1111111',    ganadores:'0' },
       ]},
       { nombre:'MATCH', tipo:'POZO', filas:[
-          { aciertos:'6', monto:'898790421', ganadores:'VACANTE' },
-          { aciertos:'5', monto:'19324780',  ganadores:'8' },
-          { aciertos:'4', monto:'3864956',   ganadores:'476' },
+          { aciertos:'6', monto:'1111111111', ganadores:'EJEMPLO' },
+          { aciertos:'5', monto:'11111111',   ganadores:'0' },
+          { aciertos:'4', monto:'1111111',    ganadores:'0' },
       ]},
       { nombre:'DESQUITE', tipo:'POZO', filas:[
-          { aciertos:'6', monto:'1354810370', ganadores:'VACANTE' },
+          { aciertos:'6', monto:'1111111111', ganadores:'EJEMPLO' },
       ]},
       { nombre:'SALE O SALE', tipo:'COBRA', filas:[
-          { aciertos:'5', monto:'3110996', ganadores:'16' },
+          { aciertos:'5', monto:'1111111', ganadores:'0' },
       ]},
     ],
-    notaFinal: 'Nº PLUS: SIN GANADORES',
+    notaFinal: 'EJEMPLO — REEMPLAZAR POR LOS DATOS DEL SORTEO',
     logo: 'loto',
     stickers: [ nuevoLogoSticker('loto') ], stkSel: -1,
   },
@@ -2340,14 +2341,14 @@ const telekino = {
   estado: {
     titulo: 'ÚLTIMO SORTEO',
     plataforma: 'TELEKINO',
-    sorteo: '2438',
-    fecha: '26/07/2026',
+    sorteo: '0000',
+    fecha: 'DATOS DE EJEMPLO',
     grupos: [
-      { nombre:'TELEKINO', nums:'01 02 03 04 07 09 13 14 16 17 18 19 23 24 25' },
-      { nombre:'REKINO',   nums:'03 05 06 07 08 09 11 12 16 17 18 19 20 21 25' },
+      { nombre:'TELEKINO', nums:'00 01 10 11 00 01 10 11 00 01 10 11 00 01 10' },
+      { nombre:'REKINO',   nums:'00 01 10 11 00 01 10 11 00 01 10 11 00 01 10' },
     ],
-    proxFecha: 'SORTEO 2439 · 02/08/2026',
-    pozo: '2900',
+    proxFecha: 'EJEMPLO',
+    pozo: '1111',
     sufijo: 'MILLONES',
     logo: 'telekino',
     stickers: [ nuevoLogoSticker('telekino') ], stkSel: -1,
@@ -2474,14 +2475,16 @@ const telebingo = {
   estado: {
     titulo: 'GANADORES DEL SORTEO',
     plataforma: 'PATAGONIA TELEBINGO',
-    sorteo: '458',
-    fecha: '26/07/2026',
-    // datos reales del sorteo del 26/07/2026, como punto de partida
+    sorteo: '000',
+    fecha: 'DATOS DE EJEMPLO',
+    // Ejemplos imposibles de confundir con un sorteo real: acá se publican cartones y
+    // localidades de gente que cobró un premio, así que un dato de fábrica que "parezca
+    // real" es el que más caro sale si se sube sin reemplazar.
     ganadores: [
-      { ronda:1, tipo:'Línea', carton:'35974',  ag:'32-74',  localidad:'Bariloche - Rio Negro',   premio:'720000' },
-      { ronda:1, tipo:'Bingo', carton:'307821', ag:'53-0',   localidad:'Allen - Rio Negro',       premio:'1800000' },
-      { ronda:2, tipo:'Línea', carton:'38372',  ag:'46-0',   localidad:'Catriel - Rio Negro',     premio:'1450000' },
-      { ronda:2, tipo:'Bingo', carton:'513802', ag:'242-0',  localidad:'Centenario - Neuquen',    premio:'3600000' },
+      { ronda:1, tipo:'Línea', carton:'000000', ag:'0-0', localidad:'LOCALIDAD DE EJEMPLO', premio:'1111111' },
+      { ronda:1, tipo:'Bingo', carton:'111111', ag:'1-1', localidad:'LOCALIDAD DE EJEMPLO', premio:'1111111' },
+      { ronda:2, tipo:'Línea', carton:'000000', ag:'0-0', localidad:'LOCALIDAD DE EJEMPLO', premio:'1111111' },
+      { ronda:2, tipo:'Bingo', carton:'111111', ag:'1-1', localidad:'LOCALIDAD DE EJEMPLO', premio:'1111111' },
     ],
     nota: 'En caso de divergencia entre este contenido y los extractos oficiales de Lotería de Río Negro, tendrán plena validez estos últimos.',
     logo: 'telebingo',
@@ -2787,18 +2790,20 @@ const quiniela = {
     // "el último publicado", así nadie se lleva el de la mañana cuando ya salió el de la
     // tarde. El nombre real llega en la respuesta y es el que va a la pieza.
     turnoPedido: QUINIELA_ULTIMO,
-    fecha: 'VIERNES 31 JULIO 2026',
-    caducidad: '10/08/2026',
-    // datos reales del extracto del 31/07/2026, como punto de partida
+    fecha: 'DATOS DE EJEMPLO',
+    caducidad: 'EJEMPLO',
+    // Las cuatro columnas arrancan con la misma cuenta binaria: 80 cifras de puros ceros y
+    // unos. Es la plantilla donde más fácil pasa desapercibido un dato viejo (son cuatro
+    // columnas casi idénticas), así que el estado de fábrica tiene que cantar solo.
     loterias: [
-      { nombre:'LA NEUQUINA', codigo:'31890-10:15',
-        nums:'9399 5652 7339 8184 3819 7557 7183 4167 7737 4333 3410 8427 2485 1416 4035 4448 1642 3492 8297 4172' },
-      { nombre:'LA RIONEGRINA', codigo:'9870-10:15',
-        nums:'3384 1092 5381 3791 8899 7252 1435 5135 6614 0573 3633 6287 4214 8387 6295 7463 8161 0884 5315 3831' },
-      { nombre:'LOTERÍA DE LA CIUDAD', codigo:'52712-10:15',
-        nums:'0676 2815 8099 1200 9490 3809 4085 0569 1934 1179 9798 3038 6719 2398 2053 1726 6879 3664 9639 9803' },
-      { nombre:'LOTERÍA DE LA PROVINCIA', codigo:'1318-10:15',
-        nums:'7085 3281 7995 6607 5077 3911 3908 3989 6325 8069 2901 6412 5969 2009 0530 1324 3958 5781 7302 8850' },
+      { nombre:'LA NEUQUINA', codigo:'0000-00:00',
+        nums:'0000 0001 0010 0011 0100 0101 0110 0111 1000 1001 1010 1011 1100 1101 1110 1111 0000 0001 0010 0011' },
+      { nombre:'LA RIONEGRINA', codigo:'0000-00:00',
+        nums:'0000 0001 0010 0011 0100 0101 0110 0111 1000 1001 1010 1011 1100 1101 1110 1111 0000 0001 0010 0011' },
+      { nombre:'LOTERÍA DE LA CIUDAD', codigo:'0000-00:00',
+        nums:'0000 0001 0010 0011 0100 0101 0110 0111 1000 1001 1010 1011 1100 1101 1110 1111 0000 0001 0010 0011' },
+      { nombre:'LOTERÍA DE LA PROVINCIA', codigo:'0000-00:00',
+        nums:'0000 0001 0010 0011 0100 0101 0110 0111 1000 1001 1010 1011 1100 1101 1110 1111 0000 0001 0010 0011' },
     ],
     // sin logo de plataforma: el encabezado de cada columna ya identifica a las cuatro
     logo: '',
@@ -3047,15 +3052,16 @@ const telebingoNumeros = {
   estado: {
     titulo: 'NÚMEROS SORTEADOS',
     plataforma: 'PATAGONIA TELEBINGO',
-    sorteo: '458',
-    fecha: '26/07/2026',
-    // datos reales del extracto del 26/07/2026, como punto de partida. capsula:false = línea
-    // de texto con guiones (pedido 01/08/2026); capsula:true = círculos, como Bingo
+    sorteo: '000',
+    fecha: 'DATOS DE EJEMPLO',
+    // Ejemplos de puros ceros y unos, con la misma cantidad de números que trae un sorteo
+    // de verdad (12 / 39 / 11 / 41) para que el armado se vea igual que en uso real.
+    // capsula:false = línea de texto con guiones (pedido 01/08/2026); true = círculos.
     bloques: [
-      { nombre:'VUELTA 1 · LÍNEA', nums:'35 48 54 55 77 56 74 64 80 07 10 52', capsula:false },
-      { nombre:'VUELTA 1 · BINGO', nums:'50 13 36 57 03 15 59 67 62 42 21 17 45 30 26 86 19 38 85 60 23 46 78 47 08 05 72 43 32 63 24 79 71 02 90 65 69 31 84', capsula:true },
-      { nombre:'VUELTA 2 · LÍNEA', nums:'72 42 67 40 61 10 13 34 24 08 25', capsula:false },
-      { nombre:'VUELTA 2 · BINGO', nums:'44 23 66 78 05 46 54 06 70 01 60 27 21 71 28 04 43 88 41 58 89 38 52 83 77 87 32 63 50 33 80 56 81 47 20 73 64 75 02 65 17', capsula:true },
+      { nombre:'VUELTA 1 · LÍNEA', nums:'00 01 10 11 00 01 10 11 00 01 10 11', capsula:false },
+      { nombre:'VUELTA 1 · BINGO', nums:'00 01 10 11 00 01 10 11 00 01 10 11 00 01 10 11 00 01 10 11 00 01 10 11 00 01 10 11 00 01 10 11 00 01 10 11 00 01 10', capsula:true },
+      { nombre:'VUELTA 2 · LÍNEA', nums:'00 01 10 11 00 01 10 11 00 01 10', capsula:false },
+      { nombre:'VUELTA 2 · BINGO', nums:'00 01 10 11 00 01 10 11 00 01 10 11 00 01 10 11 00 01 10 11 00 01 10 11 00 01 10 11 00 01 10 11 00 01 10 11 00 01 10 11 00', capsula:true },
     ],
     logo: 'telebingo',
     stickers: [ nuevoLogoSticker('telebingo') ], stkSel: -1,
