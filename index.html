@@ -483,7 +483,32 @@ const AUTOGUARDADO_V = 1;
 
 // las claves del estado que NO viajan al localStorage: llevan objetos Image adentro
 // (no son serializables) y son justamente las pesadas
-const NO_GUARDAR = new Set(['stickers', 'stkSel', 'sel', 'juegos']);
+const NO_GUARDAR = new Set(['stickers', 'stkSel', 'sel']);
+
+// Deja el estado listo para JSON: saca las claves que no viajan y tira cualquier Image
+// que haya quedado colgada adentro — el arte de cada juego en Ganadores vive en
+// `items`, que sí se guarda. Sin esto, un <img> se serializa como {}: un objeto vacío
+// pero VERDADERO, así que al recargar la página el panel dice "✓ arte cargado" y el
+// canvas revienta al intentar dibujarlo, que es como quedaba la vista previa en negro.
+function paraGuardar(estado){
+  const limpio = {};
+  Object.entries(estado).forEach(([k, v]) => { if (!NO_GUARDAR.has(k)) limpio[k] = v; });
+  return JSON.parse(JSON.stringify(limpio, (k, v) => (v instanceof HTMLImageElement ? undefined : v)));
+}
+
+// Clon profundo que respeta los objetos Image en vez de romperlos: los logos son
+// compartidos y se pasan por referencia. Es lo que permite que "Empezar de cero"
+// devuelva también los stickers de fábrica.
+function clonarEstado(v){
+  if (Array.isArray(v)) return v.map(clonarEstado);
+  if (v instanceof HTMLImageElement) return v;
+  if (v && typeof v === 'object'){
+    const o = {};
+    Object.entries(v).forEach(([k, x]) => { o[k] = clonarEstado(x); });
+    return o;
+  }
+  return v;
+}
 
 function leerAutoguardado(){
   try {
@@ -507,8 +532,7 @@ function guardarAhora(){
   const plantillas = (prev && prev.plantillas) || {};
 
   const P = plantilla();
-  const limpio = {};
-  Object.entries(P.estado).forEach(([k, v]) => { if (!NO_GUARDAR.has(k)) limpio[k] = v; });
+  const limpio = paraGuardar(P.estado);
 
   // La fecha de "última edición" solo se toca si los datos REALMENTE cambiaron. draw()
   // corre también al abrir la página, al cambiar de pestaña y al seleccionar un sticker;
@@ -519,7 +543,10 @@ function guardarAhora(){
   // fábrica: abrir la herramienta y no tocar nada no puede contar como una edición.
   const antes = plantillas[app.actual] === undefined ? undefined : JSON.stringify(plantillas[app.actual]);
   const ahora = JSON.stringify(limpio);
-  const fabrica = ESTADOS_DE_FABRICA[app.actual] && JSON.stringify(ESTADOS_DE_FABRICA[app.actual]);
+  // se compara contra la fábrica pasada por el mismo filtro, si no la comparación daría
+  // distinto siempre (la fábrica tiene stickers y lo guardado no) y abrir la herramienta
+  // contaría como edición
+  const fabrica = ESTADOS_DE_FABRICA[app.actual] && JSON.stringify(paraGuardar(ESTADOS_DE_FABRICA[app.actual]));
   const cambio = antes === undefined ? (!!fabrica && ahora !== fabrica) : (antes !== ahora);
 
   plantillas[app.actual] = limpio;
@@ -557,6 +584,8 @@ function restaurarAutoguardado(){
       if (!(k in P.estado)) return;
       P.estado[k] = v;
     });
+    // lo guardado viene sin imágenes: la plantilla que las tenga rearma sus objetos
+    if (P.sanear) P.sanear();
   });
 
   if (g.app){
@@ -578,6 +607,17 @@ function borrarAutoguardadoDe(id){
   delete (g.plantillas || {})[id];
   delete (g.ultimaEdicion || {})[id];
   ultimaEdicion = g.ultimaEdicion || {};
+  localStorage.setItem(AUTOGUARDADO_KEY, JSON.stringify(g));
+}
+
+// El aspecto (fondo, color de números, marca, leyenda legal) es global, no de una
+// plantilla, y vive aparte en el guardado: si no se borra acá, "Empezar de cero" deja
+// la pieza con el fondo y los colores que alguien eligió la semana pasada.
+function borrarAspectoGuardado(){
+  const g = leerAutoguardado();
+  if (!g) return;
+  delete g.app;
+  delete g.legal;
   localStorage.setItem(AUTOGUARDADO_KEY, JSON.stringify(g));
 }
 
@@ -1570,6 +1610,16 @@ const ganadores = {
     sel: 0,
     logo: 'betsur',
     stickers: [ nuevoLogoSticker('betsur') ], stkSel: -1,
+  },
+
+  // Lo guardado en el navegador no incluye el arte (pesa demasiado). Al volver, cada
+  // juego se rearma con su nombre y su monto y el encuadre en cero: si quedara el
+  // encuadre viejo, el zoom marcaría 232% sobre una caja vacía.
+  sanear(){
+    const E = this.estado;
+    E.items = (E.items || []).map(it => nuevoJuego((it && it.nombre) || '', (it && it.monto) || ''));
+    if (!E.items.length) E.items = [ nuevoJuego() ];
+    E.sel = 0;
   },
 
   encuadrar(it){
@@ -3492,28 +3542,32 @@ function respaldo(url, texto){
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
 
 // Copia de los estados de fábrica ANTES de volcar lo guardado: es a esto a lo que
-// vuelve "Empezar de cero". Los stickers no se copian (llevan objetos Image), y no
-// hace falta: el logo de plataforma se rearma solo desde estado.logo.
+// vuelve "Empezar de cero". Se copia TODO, stickers incluidos — el clon pasa los
+// objetos Image por referencia, así que el logo de plataforma también vuelve a su
+// tamaño y su lugar si alguien lo movió, lo estiró o lo borró.
 const ESTADOS_DE_FABRICA = {};
-Object.entries(PLANTILLAS).forEach(([id, P]) => {
-  const copia = {};
-  Object.entries(P.estado).forEach(([k, v]) => {
-    if (NO_GUARDAR.has(k)) return;
-    copia[k] = JSON.parse(JSON.stringify(v));
-  });
-  ESTADOS_DE_FABRICA[id] = copia;
-});
+Object.entries(PLANTILLAS).forEach(([id, P]) => { ESTADOS_DE_FABRICA[id] = clonarEstado(P.estado); });
+
+// El aspecto es global y hasta acá no tenía vuelta atrás: quien cambiaba el fondo o el
+// color de números no tenía forma de volver al original desde la herramienta.
+const APP_DE_FABRICA = { fondo: app.fondo, fondoImg: app.fondoImg, marca: app.marca,
+                         colorNumeros: app.colorNumeros, oscurecer: app.oscurecer };
+const LEGAL_DE_FABRICA = $('legal') ? $('legal').value : '';
 
 restaurarAutoguardado();
 
 // los desplegables de aspecto ya se habían armado leyendo `app` ANTES de restaurar, así
-// que hay que volver a sincronizarlos o mostrarían un valor y se dibujaría otro
-$('colorNumeros').value = app.colorNumeros;
-$('marca').value = app.marca;
-$('oscurecer').value = Math.round(app.oscurecer * 100);
-$('oscurecer').nextElementSibling.textContent = Math.round(app.oscurecer * 100) + '%';
-renderSelectorFondo(app.fondo);
-$('fondoImagen').style.display = app.fondo === 'imagen' ? 'block' : 'none';
+// que hay que volver a sincronizarlos o mostrarían un valor y se dibujaría otro. Lo
+// mismo hace falta después de "Empezar de cero".
+function sincronizarAspecto(){
+  $('colorNumeros').value = app.colorNumeros;
+  $('marca').value = app.marca;
+  $('oscurecer').value = Math.round(app.oscurecer * 100);
+  $('oscurecer').nextElementSibling.textContent = Math.round(app.oscurecer * 100) + '%';
+  renderSelectorFondo(app.fondo);
+  $('fondoImagen').style.display = app.fondo === 'imagen' ? 'block' : 'none';
+}
+sincronizarAspecto();
 // si lo guardado era un fondo propio, se vuelve a cargar la foto desde el localStorage
 if (String(app.fondo).startsWith('guardado:')){
   const item = leerFondosGuardados().find(g => g.id === app.fondo.slice('guardado:'.length));
@@ -3524,9 +3578,13 @@ $('guardadoBorrar').addEventListener('click', () => {
   const P = plantilla();
   const fabrica = ESTADOS_DE_FABRICA[app.actual];
   if (!fabrica) return;
-  if (!confirm('¿Volver esta plantilla a los datos de ejemplo? Se pierde lo que tengas cargado acá.')) return;
-  Object.entries(fabrica).forEach(([k, v]) => { P.estado[k] = JSON.parse(JSON.stringify(v)); });
+  if (!confirm('¿Volver esta plantilla a como viene de fábrica?\n\nSe pierde lo que tengas cargado acá, y el aspecto (fondo, color de números, marca y leyenda legal) vuelve al original.')) return;
+  Object.entries(fabrica).forEach(([k, v]) => { P.estado[k] = clonarEstado(v); });
+  Object.assign(app, APP_DE_FABRICA);
+  if ($('legal')) $('legal').value = LEGAL_DE_FABRICA;
   borrarAutoguardadoDe(app.actual);
+  borrarAspectoGuardado();
+  sincronizarAspecto();
   P.panel($('panelPlantilla'));
   renderStickers();
   draw();
