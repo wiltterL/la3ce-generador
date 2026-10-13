@@ -143,7 +143,11 @@
   }
   .aviso.on{display:block}
 
-  .cap{font-size:11px;color:#777;text-transform:uppercase;letter-spacing:.1em;margin-bottom:9px}
+  .cap{font-size:11px;color:#777;text-transform:uppercase;letter-spacing:.1em}
+  .cap-fila{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;max-width:378px}
+  .cap-fila button{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;font-size:12px}
+  .cap-fila svg{width:15px;height:15px}
+  .duo > button.primario{padding:13px 8px;font-size:13.5px}
   #cv{
     display:block;width:378px;height:672px;border-radius:6px;background:#181818;
     box-shadow:0 12px 40px rgba(0,0,0,.55);cursor:grab;touch-action:none;
@@ -156,8 +160,8 @@
 
 <header>
   <h1>Generador de stories LA3CE</h1>
-  <p>Elegí la plantilla, cargá los datos y descargá el PNG listo para subir. El marco LA3CE no se
-     toca: siempre sale igual, la arme quien la arme.</p>
+  <p>Elegí la plantilla, cargá los datos y descargá el PNG o el video listo para subir. El marco
+     LA3CE no se toca: siempre sale igual, la arme quien la arme.</p>
 </header>
 
 <div class="tabs" id="tabs"></div>
@@ -195,11 +199,11 @@
       <div id="fondoImagen" style="display:none;margin-top:11px">
         <div class="dz" id="fondoDrop">Arrastrá una imagen acá o hacé clic</div>
         <div class="slider">
-          <label>Oscurecer</label>
+          <label>Velo</label>
           <input type="range" id="oscurecer" min="0" max="90" value="58">
           <span>58%</span>
         </div>
-        <p class="hint">La imagen se recorta para llenar la historia. El oscurecido es lo que
+        <p class="hint">La imagen se recorta para llenar la historia. El velo claro es lo que
           mantiene legibles los textos y la leyenda legal encima.</p>
 
         <div style="margin-top:12px;padding-top:12px;border-top:1px solid #2c2c2c">
@@ -214,14 +218,15 @@
         </div>
       </div>
 
-      <div class="campo" style="margin-top:12px">
+      <!-- el diseño claro (13/10/2026) usa siempre el lockup con las letras originales: el
+           selector queda oculto pero vivo, para no romper lo guardado en cada compu -->
+      <div class="campo" style="margin-top:12px;display:none">
         <label for="marca">Marca en la barra</label>
         <select id="marca">
           <option value="A">A · letras intactas, fondo amarillo-verde</option>
           <option value="B">B · recoloreado sobre grafito</option>
         </select>
       </div>
-      <p class="hint">Las dos versiones del lockup LA33 + LA3CE, para comparar en contexto.</p>
     </div>
 
     <div class="card">
@@ -233,14 +238,25 @@
     </div>
 
     <div class="card">
-      <button class="primario" id="bajar">Descargar PNG 1080 × 1920</button>
+      <div class="duo">
+        <button class="primario" id="bajar">Descargar PNG</button>
+        <button class="primario" id="bajarVideo">Descargar video (10 s)</button>
+      </div>
+      <p class="hint">Los dos salen en 1080 × 1920. El video es un MP4: los números aparecen en
+        los primeros 3 segundos y después queda quieto hasta los 10. Tarda unos segundos en armarse.</p>
       <div id="respaldo" style="display:none;margin-top:11px"></div>
       <label class="check"><input type="checkbox" id="zonas"> Ver las zonas que tapa Instagram</label>
     </div>
   </div>
 
   <div class="preview">
-    <div class="cap">Vista previa</div>
+    <div class="cap-fila">
+      <div class="cap">Vista previa</div>
+      <button id="verAnim" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16l13 -8z"/></svg>
+        Ver animación
+      </button>
+    </div>
     <canvas id="cv" width="1080" height="1920"></canvas>
     <p class="pie">Se ve al 35%. El archivo descargado es 1080 × 1920 px, la medida exacta de una
       historia. Arrastrá sobre la vista previa para mover stickers o reencuadrar imágenes; la rueda
@@ -249,6 +265,18 @@
 
 </div>
 
+<!-- mp4-muxer 5.1.3 (MIT, © 2023 Vanilagy) — embebido para que la herramienta siga
+     siendo un solo archivo que anda sin internet. Arma el MP4 del botón de video. -->
+<script>
+/**
+ * Minified by jsDelivr using Terser v5.39.0.
+ * Original file: /npm/mp4-muxer@5.1.3/build/mp4-muxer.js
+ *
+ * Do NOT use SRI with dynamically generated files! More information: https://www.jsdelivr.com/using-sri-with-dynamic-files
+ */
+"use strict";var Mp4Muxer=(()=>{var e=Object.defineProperty,t=Object.getOwnPropertyDescriptor,i=Object.getOwnPropertyNames,s=Object.prototype.hasOwnProperty,a=(e,t,i)=>{if(!t.has(e))throw TypeError("Cannot "+i)},r=(e,t,i)=>(a(e,t,"read from private field"),i?i.call(e):t.get(e)),n=(e,t,i)=>{if(t.has(e))throw TypeError("Cannot add the same private member more than once");t instanceof WeakSet?t.add(e):t.set(e,i)},o=(e,t,i,s)=>(a(e,t,"write to private field"),s?s.call(e,i):t.set(e,i),i),h=(e,t,i)=>(a(e,t,"access private method"),i),l={};((t,i)=>{for(var s in i)e(t,s,{get:i[s],enumerable:!0})})(l,{ArrayBufferTarget:()=>xe,FileSystemWritableFileStreamTarget:()=>Ee,Muxer:()=>Ut,StreamTarget:()=>ze});var d,f,u,m,p,c,w,g,y=new Uint8Array(8),b=new DataView(y.buffer),k=e=>[(e%256+256)%256],T=e=>(b.setUint16(0,e,!1),[y[0],y[1]]),v=e=>(b.setUint32(0,e,!1),[y[1],y[2],y[3]]),C=e=>(b.setUint32(0,e,!1),[y[0],y[1],y[2],y[3]]),S=e=>(b.setUint32(0,Math.floor(e/2**32),!1),b.setUint32(4,e,!1),[y[0],y[1],y[2],y[3],y[4],y[5],y[6],y[7]]),x=e=>(b.setInt16(0,256*e,!1),[y[0],y[1]]),z=e=>(b.setInt32(0,65536*e,!1),[y[0],y[1],y[2],y[3]]),E=e=>(b.setInt32(0,2**30*e,!1),[y[0],y[1],y[2],y[3]]),A=(e,t=!1)=>{let i=Array(e.length).fill(null).map(((t,i)=>e.charCodeAt(i)));return t&&i.push(0),i},M=e=>e&&e[e.length-1],W=e=>{let t;for(let i of e)(!t||i.presentationTimestamp>t.presentationTimestamp)&&(t=i);return t},O=(e,t,i=!0)=>{let s=e*t;return i?Math.round(s):s},B=e=>{let t=e*(Math.PI/180),i=Math.cos(t),s=Math.sin(t);return[i,s,0,-s,i,0,0,0,1]},U=B(0),j=e=>[z(e[0]),z(e[1]),E(e[2]),z(e[3]),z(e[4]),E(e[5]),z(e[6]),z(e[7]),E(e[8])],D=e=>e?"object"!=typeof e?e:Array.isArray(e)?e.map(D):Object.fromEntries(Object.entries(e).map((([e,t])=>[e,D(t)]))):e,I=e=>e>=0&&e<2**32,R=(e,t,i)=>({type:e,contents:t&&new Uint8Array(t.flat(10)),children:i}),N=(e,t,i,s,a)=>R(e,[k(t),v(i),s??[]],a),V=e=>({type:"mdat",largeSize:e}),L=(e,t,i=!1)=>R("moov",null,[F(t,e),...e.map((e=>$(e,t))),i?le(e):null]),F=(e,t)=>{let i=O(Math.max(0,...t.filter((e=>e.samples.length>0)).map((e=>{const t=W(e.samples);return t.presentationTimestamp+t.duration}))),Mt),s=Math.max(...t.map((e=>e.id)))+1,a=!I(e)||!I(i),r=a?S:C;return N("mvhd",+a,0,[r(e),r(e),C(Mt),r(i),z(1),x(1),Array(10).fill(0),j(U),Array(24).fill(0),C(s)])},$=(e,t)=>R("trak",null,[P(e,t),H(e,t)]),P=(e,t)=>{let i,s=W(e.samples),a=O(s?s.presentationTimestamp+s.duration:0,Mt),r=!I(t)||!I(a),n=r?S:C;return i="video"===e.info.type?"number"==typeof e.info.rotation?B(e.info.rotation):e.info.rotation:U,N("tkhd",+r,3,[n(t),n(t),C(e.id),C(0),n(a),Array(8).fill(0),T(0),T(0),x("audio"===e.info.type?1:0),T(0),j(i),z("video"===e.info.type?e.info.width:0),z("video"===e.info.type?e.info.height:0)])},H=(e,t)=>R("mdia",null,[_(e,t),q("video"===e.info.type?"vide":"soun"),G(e)]),_=(e,t)=>{let i=W(e.samples),s=O(i?i.presentationTimestamp+i.duration:0,e.timescale),a=!I(t)||!I(s),r=a?S:C;return N("mdhd",+a,0,[r(t),r(t),C(e.timescale),r(s),T(21956),T(0)])},q=e=>N("hdlr",0,0,[A("mhlr"),A(e),C(0),C(0),C(0),A("mp4-muxer-hdlr",!0)]),G=e=>R("minf",null,["video"===e.info.type?J():K(),Q(),Z(e)]),J=()=>N("vmhd",0,1,[T(0),T(0),T(0),T(0)]),K=()=>N("smhd",0,0,[T(0),T(0)]),Q=()=>R("dinf",null,[X()]),X=()=>N("dref",0,0,[C(1)],[Y()]),Y=()=>N("url ",0,1),Z=e=>{const t=e.compositionTimeOffsetTable.length>1||e.compositionTimeOffsetTable.some((e=>0!==e.sampleCompositionTimeOffset));return R("stbl",null,[ee(e),se(e),ae(e),re(e),ne(e),oe(e),t?he(e):null])},ee=e=>N("stsd",0,0,[C(1)],["video"===e.info.type?te(ke[e.info.codec],e):ie(ve[e.info.codec],e)]),te=(e,t)=>{return R(e,[Array(6).fill(0),T(1),T(0),T(0),Array(12).fill(0),T(t.info.width),T(t.info.height),C(4718592),C(4718592),C(0),T(1),Array(32).fill(0),T(24),(i=65535,b.setInt16(0,i,!1),[y[0],y[1]])],[Te[t.info.codec](t)]);var i},ie=(e,t)=>R(e,[Array(6).fill(0),T(1),T(0),T(0),C(0),T(t.info.numberOfChannels),T(16),T(0),T(0),z(t.info.sampleRate)],[Ce[t.info.codec](t)]),se=e=>N("stts",0,0,[C(e.timeToSampleTable.length),e.timeToSampleTable.map((e=>[C(e.sampleCount),C(e.sampleDelta)]))]),ae=e=>{if(e.samples.every((e=>"key"===e.type)))return null;let t=[...e.samples.entries()].filter((([,e])=>"key"===e.type));return N("stss",0,0,[C(t.length),t.map((([e])=>C(e+1)))])},re=e=>N("stsc",0,0,[C(e.compactlyCodedChunkTable.length),e.compactlyCodedChunkTable.map((e=>[C(e.firstChunk),C(e.samplesPerChunk),C(1)]))]),ne=e=>N("stsz",0,0,[C(0),C(e.samples.length),e.samples.map((e=>C(e.size)))]),oe=e=>e.finalizedChunks.length>0&&M(e.finalizedChunks).offset>=2**32?N("co64",0,0,[C(e.finalizedChunks.length),e.finalizedChunks.map((e=>S(e.offset)))]):N("stco",0,0,[C(e.finalizedChunks.length),e.finalizedChunks.map((e=>C(e.offset)))]),he=e=>N("ctts",0,0,[C(e.compositionTimeOffsetTable.length),e.compositionTimeOffsetTable.map((e=>[C(e.sampleCount),C(e.sampleCompositionTimeOffset)]))]),le=e=>R("mvex",null,e.map(de)),de=e=>N("trex",0,0,[C(e.id),C(1),C(0),C(0),C(0)]),fe=(e,t)=>R("moof",null,[ue(e),...t.map(pe)]),ue=e=>N("mfhd",0,0,[C(e)]),me=e=>{let t=0,i=0,s="delta"===e.type;return i|=+s,t|=s?1:2,t<<24|i<<16},pe=e=>R("traf",null,[ce(e),we(e),ge(e)]),ce=e=>{let t=0;t|=8,t|=16,t|=32,t|=131072;let i=e.currentChunk.samples[1]??e.currentChunk.samples[0],s={duration:i.timescaleUnitsToNextSample,size:i.size,flags:me(i)};return N("tfhd",0,131128,[C(e.id),C(s.duration),C(s.size),C(s.flags)])},we=e=>N("tfdt",1,0,[S(O(e.currentChunk.startTimestamp,e.timescale))]),ge=e=>{let t=e.currentChunk.samples.map((e=>e.timescaleUnitsToNextSample)),i=e.currentChunk.samples.map((e=>e.size)),s=e.currentChunk.samples.map(me),a=e.currentChunk.samples.map((t=>O(t.presentationTimestamp-t.decodeTimestamp,e.timescale))),r=new Set(t),n=new Set(i),o=new Set(s),h=new Set(a),l=2===o.size&&s[0]!==s[1],d=r.size>1,f=n.size>1,u=!l&&o.size>1,m=h.size>1||[...h].some((e=>0!==e)),p=0;return p|=1,p|=4*+l,p|=256*+d,p|=512*+f,p|=1024*+u,p|=2048*+m,N("trun",1,p,[C(e.currentChunk.samples.length),C(e.currentChunk.offset-e.currentChunk.moofOffset||0),l?C(s[0]):[],e.currentChunk.samples.map(((e,r)=>{return[d?C(t[r]):[],f?C(i[r]):[],u?C(s[r]):[],m?(n=a[r],b.setInt32(0,n,!1),[y[0],y[1],y[2],y[3]]):[]];var n}))])},ye=(e,t)=>N("tfra",1,0,[C(e.id),C(63),C(e.finalizedChunks.length),e.finalizedChunks.map((i=>[S(O(i.startTimestamp,e.timescale)),S(i.moofOffset),C(t+1),C(1),C(1)]))]),be=()=>N("mfro",0,0,[C(0)]),ke={avc:"avc1",hevc:"hvc1",vp9:"vp09",av1:"av01"},Te={avc:e=>e.info.decoderConfig&&R("avcC",[...new Uint8Array(e.info.decoderConfig.description)]),hevc:e=>e.info.decoderConfig&&R("hvcC",[...new Uint8Array(e.info.decoderConfig.description)]),vp9:e=>{if(!e.info.decoderConfig)return null;let t=e.info.decoderConfig;if(!t.colorSpace)throw new Error("'colorSpace' is required in the decoder config for VP9.");let i=t.codec.split("."),s=Number(i[1]),a=Number(i[2]),r=0+(Number(i[3])<<4)+Number(t.colorSpace.fullRange);return N("vpcC",1,0,[k(s),k(a),k(r),k(2),k(2),k(2),T(0)])},av1:()=>R("av1C",[129,0,0,0])},ve={aac:"mp4a",opus:"Opus"},Ce={aac:e=>{let t=new Uint8Array(e.info.decoderConfig.description);return N("esds",0,0,[C(58753152),k(32+t.byteLength),T(1),k(0),C(75530368),k(18+t.byteLength),k(64),k(21),v(0),C(130071),C(130071),C(92307584),k(t.byteLength),...t,C(109084800),k(1),k(2)])},opus:e=>{let t=3840,i=0;const s=e.info.decoderConfig?.description;if(s){if(s.byteLength<18)throw new TypeError("Invalid decoder description provided for Opus; must be at least 18 bytes long.");const e=ArrayBuffer.isView(s)?new DataView(s.buffer,s.byteOffset,s.byteLength):new DataView(s);t=e.getUint16(10,!0),i=e.getInt16(14,!0)}return R("dOps",[k(0),k(e.info.numberOfChannels),T(t),C(e.info.sampleRate),x(i),k(0)])}},Se=(Symbol("isTarget"),class{}),xe=class extends Se{constructor(){super(...arguments),this.buffer=null}},ze=class extends Se{constructor(e){if(super(),this.options=e,"object"!=typeof e)throw new TypeError("StreamTarget requires an options object to be passed to its constructor.");if(e.onData){if("function"!=typeof e.onData)throw new TypeError("options.onData, when provided, must be a function.");if(e.onData.length<2)throw new TypeError("options.onData, when provided, must be a function that takes in at least two arguments (data and position). Ignoring the position argument, which specifies the byte offset at which the data is to be written, can lead to broken outputs.")}if(void 0!==e.chunked&&"boolean"!=typeof e.chunked)throw new TypeError("options.chunked, when provided, must be a boolean.");if(void 0!==e.chunkSize&&(!Number.isInteger(e.chunkSize)||e.chunkSize<=0))throw new TypeError("options.chunkSize, when provided, must be a positive integer.")}},Ee=class extends Se{constructor(e,t){if(super(),this.stream=e,this.options=t,!(e instanceof FileSystemWritableFileStream))throw new TypeError("FileSystemWritableFileStreamTarget requires a FileSystemWritableFileStream instance.");if(void 0!==t&&"object"!=typeof t)throw new TypeError("FileSystemWritableFileStreamTarget's options, when provided, must be an object.");if(t&&void 0!==t.chunkSize&&(!Number.isInteger(t.chunkSize)||t.chunkSize<=0))throw new TypeError("options.chunkSize, when provided, must be a positive integer")}},Ae=class{constructor(){this.pos=0,n(this,d,new Uint8Array(8)),n(this,f,new DataView(r(this,d).buffer)),this.offsets=new WeakMap}seek(e){this.pos=e}writeU32(e){r(this,f).setUint32(0,e,!1),this.write(r(this,d).subarray(0,4))}writeU64(e){r(this,f).setUint32(0,Math.floor(e/2**32),!1),r(this,f).setUint32(4,e,!1),this.write(r(this,d).subarray(0,8))}writeAscii(e){for(let t=0;t<e.length;t++)r(this,f).setUint8(t%8,e.charCodeAt(t)),t%8==7&&this.write(r(this,d));e.length%8!=0&&this.write(r(this,d).subarray(0,e.length%8))}writeBox(e){if(this.offsets.set(e,this.pos),e.contents&&!e.children)this.writeBoxHeader(e,e.size??e.contents.byteLength+8),this.write(e.contents);else{let t=this.pos;if(this.writeBoxHeader(e,0),e.contents&&this.write(e.contents),e.children)for(let t of e.children)t&&this.writeBox(t);let i=this.pos,s=e.size??i-t;this.seek(t),this.writeBoxHeader(e,s),this.seek(i)}}writeBoxHeader(e,t){this.writeU32(e.largeSize?1:t),this.writeAscii(e.type),e.largeSize&&this.writeU64(t)}measureBoxHeader(e){return 8+(e.largeSize?8:0)}patchBox(e){let t=this.pos;this.seek(this.offsets.get(e)),this.writeBox(e),this.seek(t)}measureBox(e){if(e.contents&&!e.children){return this.measureBoxHeader(e)+e.contents.byteLength}{let t=this.measureBoxHeader(e);if(e.contents&&(t+=e.contents.byteLength),e.children)for(let i of e.children)i&&(t+=this.measureBox(i));return t}}};d=new WeakMap,f=new WeakMap;var Me,We,Oe=class extends Ae{constructor(e){super(),n(this,w),n(this,u,void 0),n(this,m,new ArrayBuffer(65536)),n(this,p,new Uint8Array(r(this,m))),n(this,c,0),o(this,u,e)}write(e){h(this,w,g).call(this,this.pos+e.byteLength),r(this,p).set(e,this.pos),this.pos+=e.byteLength,o(this,c,Math.max(r(this,c),this.pos))}finalize(){h(this,w,g).call(this,this.pos),r(this,u).buffer=r(this,m).slice(0,Math.max(r(this,c),this.pos))}};u=new WeakMap,m=new WeakMap,p=new WeakMap,c=new WeakMap,w=new WeakSet,g=function(e){let t=r(this,m).byteLength;for(;t<e;)t*=2;if(t===r(this,m).byteLength)return;let i=new ArrayBuffer(t),s=new Uint8Array(i);s.set(r(this,p),0),o(this,m,i),o(this,p,s)};var Be=class extends Ae{constructor(e){super(),n(this,Me,void 0),n(this,We,[]),o(this,Me,e)}write(e){r(this,We).push({data:e.slice(),start:this.pos}),this.pos+=e.byteLength}flush(){if(0===r(this,We).length)return;let e=[],t=[...r(this,We)].sort(((e,t)=>e.start-t.start));e.push({start:t[0].start,size:t[0].data.byteLength});for(let i=1;i<t.length;i++){let s=e[e.length-1],a=t[i];a.start<=s.start+s.size?s.size=Math.max(s.size,a.start+a.data.byteLength-s.start):e.push({start:a.start,size:a.data.byteLength})}for(let t of e){t.data=new Uint8Array(t.size);for(let e of r(this,We))t.start<=e.start&&e.start<t.start+t.size&&t.data.set(e.data,e.start-t.start);r(this,Me).options.onData?.(t.data,t.start)}r(this,We).length=0}finalize(){}};Me=new WeakMap,We=new WeakMap;var Ue,je,De,Ie,Re,Ne,Ve,Le,Fe,$e,Pe,He=class extends Ae{constructor(e){if(super(),n(this,Ie),n(this,Ne),n(this,Le),n(this,$e),n(this,Ue,void 0),n(this,je,void 0),n(this,De,[]),o(this,Ue,e),o(this,je,e.options?.chunkSize??16777216),!Number.isInteger(r(this,je))||r(this,je)<1024)throw new Error("Invalid StreamTarget options: chunkSize must be an integer not smaller than 1024.")}write(e){h(this,Ie,Re).call(this,e,this.pos),h(this,$e,Pe).call(this),this.pos+=e.byteLength}finalize(){h(this,$e,Pe).call(this,!0)}};Ue=new WeakMap,je=new WeakMap,De=new WeakMap,Ie=new WeakSet,Re=function(e,t){let i=r(this,De).findIndex((e=>e.start<=t&&t<e.start+r(this,je)));-1===i&&(i=h(this,Le,Fe).call(this,t));let s=r(this,De)[i],a=t-s.start,n=e.subarray(0,Math.min(r(this,je)-a,e.byteLength));s.data.set(n,a);let o={start:a,end:a+n.byteLength};if(h(this,Ne,Ve).call(this,s,o),0===s.written[0].start&&s.written[0].end===r(this,je)&&(s.shouldFlush=!0),r(this,De).length>2){for(let e=0;e<r(this,De).length-1;e++)r(this,De)[e].shouldFlush=!0;h(this,$e,Pe).call(this)}n.byteLength<e.byteLength&&h(this,Ie,Re).call(this,e.subarray(n.byteLength),t+n.byteLength)},Ne=new WeakSet,Ve=function(e,t){let i=0,s=e.written.length-1,a=-1;for(;i<=s;){let r=Math.floor(i+(s-i+1)/2);e.written[r].start<=t.start?(i=r+1,a=r):s=r-1}for(e.written.splice(a+1,0,t),(-1===a||e.written[a].end<t.start)&&a++;a<e.written.length-1&&e.written[a].end>=e.written[a+1].start;)e.written[a].end=Math.max(e.written[a].end,e.written[a+1].end),e.written.splice(a+1,1)},Le=new WeakSet,Fe=function(e){let t={start:Math.floor(e/r(this,je))*r(this,je),data:new Uint8Array(r(this,je)),written:[],shouldFlush:!1};return r(this,De).push(t),r(this,De).sort(((e,t)=>e.start-t.start)),r(this,De).indexOf(t)},$e=new WeakSet,Pe=function(e=!1){for(let t=0;t<r(this,De).length;t++){let i=r(this,De)[t];if(i.shouldFlush||e){for(let e of i.written)r(this,Ue).options.onData?.(i.data.subarray(e.start,e.end),i.start+e.start);r(this,De).splice(t--,1)}}};var _e,qe,Ge,Je,Ke,Qe,Xe,Ye,Ze,et,tt,it,st,at,rt,nt,ot,ht,lt,dt,ft,ut,mt,pt,ct,wt,gt,yt,bt,kt,Tt,vt,Ct,St,xt,zt,Et,At=class extends He{constructor(e){super(new ze({onData:(t,i)=>e.stream.write({type:"write",data:t,position:i}),chunkSize:e.options?.chunkSize}))}},Mt=1e3,Wt=["avc","hevc","vp9","av1"],Ot=["aac","opus"],Bt=["strict","offset","cross-track-offset"],Ut=class{constructor(e){if(n(this,st),n(this,rt),n(this,ot),n(this,lt),n(this,ft),n(this,mt),n(this,ct),n(this,gt),n(this,bt),n(this,Tt),n(this,Ct),n(this,xt),n(this,_e,void 0),n(this,qe,void 0),n(this,Ge,void 0),n(this,Je,void 0),n(this,Ke,null),n(this,Qe,null),n(this,Xe,Math.floor(Date.now()/1e3)+2082844800),n(this,Ye,[]),n(this,Ze,1),n(this,et,[]),n(this,tt,[]),n(this,it,!1),h(this,st,at).call(this,e),e.video=D(e.video),e.audio=D(e.audio),e.fastStart=D(e.fastStart),this.target=e.target,o(this,_e,{firstTimestampBehavior:"strict",...e}),e.target instanceof xe)o(this,qe,new Oe(e.target));else if(e.target instanceof ze)o(this,qe,e.target.options?.chunked?new He(e.target):new Be(e.target));else{if(!(e.target instanceof Ee))throw new Error(`Invalid target: ${e.target}`);o(this,qe,new At(e.target))}h(this,lt,dt).call(this),h(this,rt,nt).call(this)}addVideoChunk(e,t,i,s){if(!(e instanceof EncodedVideoChunk))throw new TypeError("addVideoChunk's first argument (sample) must be of type EncodedVideoChunk.");if(t&&"object"!=typeof t)throw new TypeError("addVideoChunk's second argument (meta), when provided, must be an object.");if(void 0!==i&&(!Number.isFinite(i)||i<0))throw new TypeError("addVideoChunk's third argument (timestamp), when provided, must be a non-negative real number.");if(void 0!==s&&!Number.isFinite(s))throw new TypeError("addVideoChunk's fourth argument (compositionTimeOffset), when provided, must be a real number.");let a=new Uint8Array(e.byteLength);e.copyTo(a),this.addVideoChunkRaw(a,e.type,i??e.timestamp,e.duration,t,s)}addVideoChunkRaw(e,t,i,s,a,n){if(!(e instanceof Uint8Array))throw new TypeError("addVideoChunkRaw's first argument (data) must be an instance of Uint8Array.");if("key"!==t&&"delta"!==t)throw new TypeError("addVideoChunkRaw's second argument (type) must be either 'key' or 'delta'.");if(!Number.isFinite(i)||i<0)throw new TypeError("addVideoChunkRaw's third argument (timestamp) must be a non-negative real number.");if(!Number.isFinite(s)||s<0)throw new TypeError("addVideoChunkRaw's fourth argument (duration) must be a non-negative real number.");if(a&&"object"!=typeof a)throw new TypeError("addVideoChunkRaw's fifth argument (meta), when provided, must be an object.");if(void 0!==n&&!Number.isFinite(n))throw new TypeError("addVideoChunkRaw's sixth argument (compositionTimeOffset), when provided, must be a real number.");if(h(this,xt,zt).call(this),!r(this,_e).video)throw new Error("No video track declared.");if("object"==typeof r(this,_e).fastStart&&r(this,Ke).samples.length===r(this,_e).fastStart.expectedVideoChunks)throw new Error(`Cannot add more video chunks than specified in 'fastStart' (${r(this,_e).fastStart.expectedVideoChunks}).`);let o=h(this,mt,pt).call(this,r(this,Ke),e,t,i,s,a,n);if("fragmented"===r(this,_e).fastStart&&r(this,Qe)){for(;r(this,tt).length>0&&r(this,tt)[0].decodeTimestamp<=o.decodeTimestamp;){let e=r(this,tt).shift();h(this,ct,wt).call(this,r(this,Qe),e)}o.decodeTimestamp<=r(this,Qe).lastDecodeTimestamp?h(this,ct,wt).call(this,r(this,Ke),o):r(this,et).push(o)}else h(this,ct,wt).call(this,r(this,Ke),o)}addAudioChunk(e,t,i){if(!(e instanceof EncodedAudioChunk))throw new TypeError("addAudioChunk's first argument (sample) must be of type EncodedAudioChunk.");if(t&&"object"!=typeof t)throw new TypeError("addAudioChunk's second argument (meta), when provided, must be an object.");if(void 0!==i&&(!Number.isFinite(i)||i<0))throw new TypeError("addAudioChunk's third argument (timestamp), when provided, must be a non-negative real number.");let s=new Uint8Array(e.byteLength);e.copyTo(s),this.addAudioChunkRaw(s,e.type,i??e.timestamp,e.duration,t)}addAudioChunkRaw(e,t,i,s,a){if(!(e instanceof Uint8Array))throw new TypeError("addAudioChunkRaw's first argument (data) must be an instance of Uint8Array.");if("key"!==t&&"delta"!==t)throw new TypeError("addAudioChunkRaw's second argument (type) must be either 'key' or 'delta'.");if(!Number.isFinite(i)||i<0)throw new TypeError("addAudioChunkRaw's third argument (timestamp) must be a non-negative real number.");if(!Number.isFinite(s)||s<0)throw new TypeError("addAudioChunkRaw's fourth argument (duration) must be a non-negative real number.");if(a&&"object"!=typeof a)throw new TypeError("addAudioChunkRaw's fifth argument (meta), when provided, must be an object.");if(h(this,xt,zt).call(this),!r(this,_e).audio)throw new Error("No audio track declared.");if("object"==typeof r(this,_e).fastStart&&r(this,Qe).samples.length===r(this,_e).fastStart.expectedAudioChunks)throw new Error(`Cannot add more audio chunks than specified in 'fastStart' (${r(this,_e).fastStart.expectedAudioChunks}).`);let n=h(this,mt,pt).call(this,r(this,Qe),e,t,i,s,a);if("fragmented"===r(this,_e).fastStart&&r(this,Ke)){for(;r(this,et).length>0&&r(this,et)[0].decodeTimestamp<=n.decodeTimestamp;){let e=r(this,et).shift();h(this,ct,wt).call(this,r(this,Ke),e)}n.decodeTimestamp<=r(this,Ke).lastDecodeTimestamp?h(this,ct,wt).call(this,r(this,Qe),n):r(this,tt).push(n)}else h(this,ct,wt).call(this,r(this,Qe),n)}finalize(){if(r(this,it))throw new Error("Cannot finalize a muxer more than once.");if("fragmented"===r(this,_e).fastStart){for(let e of r(this,et))h(this,ct,wt).call(this,r(this,Ke),e);for(let e of r(this,tt))h(this,ct,wt).call(this,r(this,Qe),e);h(this,Tt,vt).call(this,!1)}else r(this,Ke)&&h(this,bt,kt).call(this,r(this,Ke)),r(this,Qe)&&h(this,bt,kt).call(this,r(this,Qe));let e=[r(this,Ke),r(this,Qe)].filter(Boolean);if("in-memory"===r(this,_e).fastStart){let t;for(let i=0;i<2;i++){let i=L(e,r(this,Xe)),s=r(this,qe).measureBox(i);t=r(this,qe).measureBox(r(this,Je));let a=r(this,qe).pos+s+t;for(let e of r(this,Ye)){e.offset=a;for(let{data:i}of e.samples)a+=i.byteLength,t+=i.byteLength}if(a<2**32)break;t>=2**32&&(r(this,Je).largeSize=!0)}let i=L(e,r(this,Xe));r(this,qe).writeBox(i),r(this,Je).size=t,r(this,qe).writeBox(r(this,Je));for(let e of r(this,Ye))for(let t of e.samples)r(this,qe).write(t.data),t.data=null}else if("fragmented"===r(this,_e).fastStart){let t=r(this,qe).pos,i=(e=>R("mfra",null,[...e.map(ye),be()]))(e);r(this,qe).writeBox(i);let s=r(this,qe).pos-t;r(this,qe).seek(r(this,qe).pos-4),r(this,qe).writeU32(s)}else{let t=r(this,qe).offsets.get(r(this,Je)),i=r(this,qe).pos-t;r(this,Je).size=i,r(this,Je).largeSize=i>=2**32,r(this,qe).patchBox(r(this,Je));let s=L(e,r(this,Xe));if("object"==typeof r(this,_e).fastStart){r(this,qe).seek(r(this,Ge)),r(this,qe).writeBox(s);let e=t-r(this,qe).pos;r(this,qe).writeBox({type:"free",size:e})}else r(this,qe).writeBox(s)}h(this,Ct,St).call(this),r(this,qe).finalize(),o(this,it,!0)}};return _e=new WeakMap,qe=new WeakMap,Ge=new WeakMap,Je=new WeakMap,Ke=new WeakMap,Qe=new WeakMap,Xe=new WeakMap,Ye=new WeakMap,Ze=new WeakMap,et=new WeakMap,tt=new WeakMap,it=new WeakMap,st=new WeakSet,at=function(e){if("object"!=typeof e)throw new TypeError("The muxer requires an options object to be passed to its constructor.");if(!(e.target instanceof Se))throw new TypeError("The target must be provided and an instance of Target.");if(e.video){if(!Wt.includes(e.video.codec))throw new TypeError(`Unsupported video codec: ${e.video.codec}`);if(!Number.isInteger(e.video.width)||e.video.width<=0)throw new TypeError(`Invalid video width: ${e.video.width}. Must be a positive integer.`);if(!Number.isInteger(e.video.height)||e.video.height<=0)throw new TypeError(`Invalid video height: ${e.video.height}. Must be a positive integer.`);const t=e.video.rotation;if("number"==typeof t&&![0,90,180,270].includes(t))throw new TypeError(`Invalid video rotation: ${t}. Has to be 0, 90, 180 or 270.`);if(Array.isArray(t)&&(9!==t.length||t.some((e=>"number"!=typeof e))))throw new TypeError(`Invalid video transformation matrix: ${t.join()}`);if(void 0!==e.video.frameRate&&(!Number.isInteger(e.video.frameRate)||e.video.frameRate<=0))throw new TypeError(`Invalid video frame rate: ${e.video.frameRate}. Must be a positive integer.`)}if(e.audio){if(!Ot.includes(e.audio.codec))throw new TypeError(`Unsupported audio codec: ${e.audio.codec}`);if(!Number.isInteger(e.audio.numberOfChannels)||e.audio.numberOfChannels<=0)throw new TypeError(`Invalid number of audio channels: ${e.audio.numberOfChannels}. Must be a positive integer.`);if(!Number.isInteger(e.audio.sampleRate)||e.audio.sampleRate<=0)throw new TypeError(`Invalid audio sample rate: ${e.audio.sampleRate}. Must be a positive integer.`)}if(e.firstTimestampBehavior&&!Bt.includes(e.firstTimestampBehavior))throw new TypeError(`Invalid first timestamp behavior: ${e.firstTimestampBehavior}`);if("object"==typeof e.fastStart){if(e.video){if(void 0===e.fastStart.expectedVideoChunks)throw new TypeError("'fastStart' is an object but is missing property 'expectedVideoChunks'.");if(!Number.isInteger(e.fastStart.expectedVideoChunks)||e.fastStart.expectedVideoChunks<0)throw new TypeError("'expectedVideoChunks' must be a non-negative integer.")}if(e.audio){if(void 0===e.fastStart.expectedAudioChunks)throw new TypeError("'fastStart' is an object but is missing property 'expectedAudioChunks'.");if(!Number.isInteger(e.fastStart.expectedAudioChunks)||e.fastStart.expectedAudioChunks<0)throw new TypeError("'expectedAudioChunks' must be a non-negative integer.")}}else if(![!1,"in-memory","fragmented"].includes(e.fastStart))throw new TypeError("'fastStart' option must be false, 'in-memory', 'fragmented' or an object.")},rt=new WeakSet,nt=function(){var e;if(r(this,qe).writeBox((e={holdsAvc:"avc"===r(this,_e).video?.codec,fragmented:"fragmented"===r(this,_e).fastStart}).fragmented?R("ftyp",[A("iso5"),C(512),A("iso5"),A("iso6"),A("mp41")]):R("ftyp",[A("isom"),C(512),A("isom"),e.holdsAvc?A("avc1"):[],A("mp41")])),o(this,Ge,r(this,qe).pos),"in-memory"===r(this,_e).fastStart)o(this,Je,V(!1));else if("fragmented"===r(this,_e).fastStart);else{if("object"==typeof r(this,_e).fastStart){let e=h(this,ot,ht).call(this);r(this,qe).seek(r(this,qe).pos+e)}o(this,Je,V(!0)),r(this,qe).writeBox(r(this,Je))}h(this,Ct,St).call(this)},ot=new WeakSet,ht=function(){if("object"!=typeof r(this,_e).fastStart)return;let e=0,t=[r(this,_e).fastStart.expectedVideoChunks,r(this,_e).fastStart.expectedAudioChunks];for(let i of t)i&&(e+=8*Math.ceil(2/3*i),e+=4*i,e+=12*Math.ceil(2/3*i),e+=4*i,e+=8*i);return e+=4096,e},lt=new WeakSet,dt=function(){if(r(this,_e).video&&o(this,Ke,{id:1,info:{type:"video",codec:r(this,_e).video.codec,width:r(this,_e).video.width,height:r(this,_e).video.height,rotation:r(this,_e).video.rotation??0,decoderConfig:null},timescale:r(this,_e).video.frameRate??57600,samples:[],finalizedChunks:[],currentChunk:null,firstDecodeTimestamp:void 0,lastDecodeTimestamp:-1,timeToSampleTable:[],compositionTimeOffsetTable:[],lastTimescaleUnits:null,lastSample:null,compactlyCodedChunkTable:[]}),r(this,_e).audio&&(o(this,Qe,{id:r(this,_e).video?2:1,info:{type:"audio",codec:r(this,_e).audio.codec,numberOfChannels:r(this,_e).audio.numberOfChannels,sampleRate:r(this,_e).audio.sampleRate,decoderConfig:null},timescale:r(this,_e).audio.sampleRate,samples:[],finalizedChunks:[],currentChunk:null,firstDecodeTimestamp:void 0,lastDecodeTimestamp:-1,timeToSampleTable:[],compositionTimeOffsetTable:[],lastTimescaleUnits:null,lastSample:null,compactlyCodedChunkTable:[]}),"aac"===r(this,_e).audio.codec)){let e=h(this,ft,ut).call(this,2,r(this,_e).audio.sampleRate,r(this,_e).audio.numberOfChannels);r(this,Qe).info.decoderConfig={codec:r(this,_e).audio.codec,description:e,numberOfChannels:r(this,_e).audio.numberOfChannels,sampleRate:r(this,_e).audio.sampleRate}}},ft=new WeakSet,ut=function(e,t,i){let s=[96e3,88200,64e3,48e3,44100,32e3,24e3,22050,16e3,12e3,11025,8e3,7350].indexOf(t),a=i,r="";r+=e.toString(2).padStart(5,"0"),r+=s.toString(2).padStart(4,"0"),15===s&&(r+=t.toString(2).padStart(24,"0")),r+=a.toString(2).padStart(4,"0");let n=8*Math.ceil(r.length/8);r=r.padEnd(n,"0");let o=new Uint8Array(r.length/8);for(let e=0;e<r.length;e+=8)o[e/8]=parseInt(r.slice(e,e+8),2);return o},mt=new WeakSet,pt=function(e,t,i,s,a,r,n){let o=s/1e6,l=(s-(n??0))/1e6,d=a/1e6,f=h(this,gt,yt).call(this,o,l,e);return o=f.presentationTimestamp,l=f.decodeTimestamp,r?.decoderConfig&&(null===e.info.decoderConfig?e.info.decoderConfig=r.decoderConfig:Object.assign(e.info.decoderConfig,r.decoderConfig)),{presentationTimestamp:o,decodeTimestamp:l,duration:d,data:t,size:t.byteLength,type:i,timescaleUnitsToNextSample:O(d,e.timescale)}},ct=new WeakSet,wt=function(e,t){"fragmented"!==r(this,_e).fastStart&&e.samples.push(t);const i=O(t.presentationTimestamp-t.decodeTimestamp,e.timescale);if(null!==e.lastTimescaleUnits){let s=O(t.decodeTimestamp,e.timescale,!1),a=Math.round(s-e.lastTimescaleUnits);if(e.lastTimescaleUnits+=a,e.lastSample.timescaleUnitsToNextSample=a,"fragmented"!==r(this,_e).fastStart){let t=M(e.timeToSampleTable);1===t.sampleCount?(t.sampleDelta=a,t.sampleCount++):t.sampleDelta===a?t.sampleCount++:(t.sampleCount--,e.timeToSampleTable.push({sampleCount:2,sampleDelta:a}));const s=M(e.compositionTimeOffsetTable);s.sampleCompositionTimeOffset===i?s.sampleCount++:e.compositionTimeOffsetTable.push({sampleCount:1,sampleCompositionTimeOffset:i})}}else e.lastTimescaleUnits=0,"fragmented"!==r(this,_e).fastStart&&(e.timeToSampleTable.push({sampleCount:1,sampleDelta:O(t.duration,e.timescale)}),e.compositionTimeOffsetTable.push({sampleCount:1,sampleCompositionTimeOffset:i}));e.lastSample=t;let s=!1;if(e.currentChunk){let i=t.presentationTimestamp-e.currentChunk.startTimestamp;if("fragmented"===r(this,_e).fastStart){e===(r(this,Ke)??r(this,Qe))&&"key"===t.type&&i>=1&&(s=!0,h(this,Tt,vt).call(this))}else s=i>=.5}else s=!0;s&&(e.currentChunk&&h(this,bt,kt).call(this,e),e.currentChunk={startTimestamp:t.presentationTimestamp,samples:[]}),e.currentChunk.samples.push(t)},gt=new WeakSet,yt=function(e,t,i){const s="strict"===r(this,_e).firstTimestampBehavior,a=-1===i.lastDecodeTimestamp;if(s&&a&&0!==t)throw new Error(`The first chunk for your media track must have a timestamp of 0 (received DTS=${t}).Non-zero first timestamps are often caused by directly piping frames or audio data from a MediaStreamTrack into the encoder. Their timestamps are typically relative to the age of thedocument, which is probably what you want.\n\nIf you want to offset all timestamps of a track such that the first one is zero, set firstTimestampBehavior: 'offset' in the options.\n`);if("offset"===r(this,_e).firstTimestampBehavior||"cross-track-offset"===r(this,_e).firstTimestampBehavior){let s;void 0===i.firstDecodeTimestamp&&(i.firstDecodeTimestamp=t),s="offset"===r(this,_e).firstTimestampBehavior?i.firstDecodeTimestamp:Math.min(r(this,Ke)?.firstDecodeTimestamp??1/0,r(this,Qe)?.firstDecodeTimestamp??1/0),t-=s,e-=s}if(t<i.lastDecodeTimestamp)throw new Error(`Timestamps must be monotonically increasing (DTS went from ${1e6*i.lastDecodeTimestamp} to ${1e6*t}).`);return i.lastDecodeTimestamp=t,{presentationTimestamp:e,decodeTimestamp:t}},bt=new WeakSet,kt=function(e){if("fragmented"===r(this,_e).fastStart)throw new Error("Can't finalize individual chunks if 'fastStart' is set to 'fragmented'.");if(e.currentChunk)if(e.finalizedChunks.push(e.currentChunk),r(this,Ye).push(e.currentChunk),0!==e.compactlyCodedChunkTable.length&&M(e.compactlyCodedChunkTable).samplesPerChunk===e.currentChunk.samples.length||e.compactlyCodedChunkTable.push({firstChunk:e.finalizedChunks.length,samplesPerChunk:e.currentChunk.samples.length}),"in-memory"!==r(this,_e).fastStart){e.currentChunk.offset=r(this,qe).pos;for(let t of e.currentChunk.samples)r(this,qe).write(t.data),t.data=null;h(this,Ct,St).call(this)}else e.currentChunk.offset=0},Tt=new WeakSet,vt=function(e=!0){if("fragmented"!==r(this,_e).fastStart)throw new Error("Can't finalize a fragment unless 'fastStart' is set to 'fragmented'.");let t=[r(this,Ke),r(this,Qe)].filter((e=>e&&e.currentChunk));if(0===t.length)return;let i=(s=this,a=Ze,{set _(e){o(s,a,e,n)},get _(){return r(s,a,l)}})._++;var s,a,n,l;if(1===i){let e=L(t,r(this,Xe),!0);r(this,qe).writeBox(e)}let d=r(this,qe).pos,f=fe(i,t);r(this,qe).writeBox(f);{let e=V(!1),i=0;for(let e of t)for(let t of e.currentChunk.samples)i+=t.size;let s=r(this,qe).measureBox(e)+i;s>=2**32&&(e.largeSize=!0,s=r(this,qe).measureBox(e)+i),e.size=s,r(this,qe).writeBox(e)}for(let e of t){e.currentChunk.offset=r(this,qe).pos,e.currentChunk.moofOffset=d;for(let t of e.currentChunk.samples)r(this,qe).write(t.data),t.data=null}let u=r(this,qe).pos;r(this,qe).seek(r(this,qe).offsets.get(f));let m=fe(i,t);r(this,qe).writeBox(m),r(this,qe).seek(u);for(let e of t)e.finalizedChunks.push(e.currentChunk),r(this,Ye).push(e.currentChunk),e.currentChunk=null;e&&h(this,Ct,St).call(this)},Ct=new WeakSet,St=function(){r(this,qe)instanceof Be&&r(this,qe).flush()},xt=new WeakSet,zt=function(){if(r(this,it))throw new Error("Cannot add new video or audio chunks after the file has been finalized.")},Et=l,((a,r,n,o)=>{if(r&&"object"==typeof r||"function"==typeof r)for(let h of i(r))s.call(a,h)||h===n||e(a,h,{get:()=>r[h],enumerable:!(o=t(r,h))||o.enumerable});return a})(e({},"__esModule",{value:!0}),Et)})();"object"==typeof module&&"object"==typeof module.exports&&Object.assign(module.exports,Mp4Muxer);
+//# sourceMappingURL=/sm/2d65509620dc68a5b97bc1c90bf2b2165147c6e410efb5392995ca68167616ab.map
+</script>
 <script>
 (() => {
 
@@ -276,8 +304,24 @@ const GRID  = { x:70, y:474, w:940, h:1186, gap:34 };
 // Instagram, y esta banda cae adentro — es una decisión tomada a sabiendas, no un error.
 const LEGAL = { y:1736, alto:108 };
 
+/* Diseño claro con tarjetas (dirección C, elegida por Wiltter el 13/10/2026).
+   C sigue existiendo porque las plantillas pasan esos colores pensando en el fondo oscuro
+   de antes; tono() los traduce a su par sobre fondo claro en vez de tocar cada llamada. */
+const T = {
+  bg:'#E9ECE6', card:'#FFFFFF', fg:'#10231A', muted:'#5B6A61', suave:'#94A099',
+  verde:'#0E6E4B', tile:'#E3F1E9', numero:'#0B5A3D', amarillo:'#F3D320',
+  linea:'rgba(16,35,26,0.09)', vacio:'#F1F3EF',
+};
+function tono(c){
+  return ({ [C.amarillo]:T.numero, [C.blanco]:T.fg, [C.gris]:T.muted,
+            [C.verdeClaro]:T.verde, [C.verde]:T.verde })[c] || c;
+}
+
 const $  = id => document.getElementById(id);
-const cv = $('cv'), ctx = cv.getContext('2d');
+const cv = $('cv');
+// `let` y no `const`: el video se dibuja en un canvas aparte para no pisar la vista previa,
+// y todos los helpers dibujan sobre el ctx que esté puesto en ese momento
+let ctx = cv.getContext('2d');
 
 const logo = new Image();
 logo.src = 'data:image/png;base64,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';
@@ -317,7 +361,7 @@ function tracked(text, x, y, sp, align){
   let total = 0;
   for (const ch of chars) total += ctx.measureText(ch).width + sp;
   total -= sp;
-  let cx = align === 'center' ? x - total/2 : x;
+  let cx = align === 'center' ? x - total/2 : align === 'right' ? x - total : x;
   for (const ch of chars){ ctx.fillText(ch, cx, y); cx += ctx.measureText(ch).width + sp; }
   ctx.textAlign = prev;
   return Math.max(total, 0);
@@ -353,6 +397,81 @@ function fmt(raw){
 }
 
 function esc(s){ return String(s == null ? '' : s).replace(/"/g, '&quot;'); }
+
+/* ==========================================================================
+   ANIMACIÓN — la misma pieza, dibujada en el tiempo (13/10/2026)
+   ==========================================================================
+   No hay una segunda versión animada de cada plantilla: es el mismo draw() de siempre,
+   con cada número, bolilla, fila o monto envuelto en aparecer(). Fuera de una animación
+   aparecer() dibuja directo, así que el PNG y la vista previa salen igual que sin esto.
+
+   Cada elemento toma un turno al dibujarse. El escalonado sale de cuántos turnos tuvo la
+   pieza en su último dibujo quieto (ANIM.n), y está calculado para que el último termine
+   antes de TOPE — 3 s — tenga la pieza 6 números o 100.
+
+   La leyenda legal NO se anima nunca: está desde el primer cuadro (Res. 446/2025).     */
+const ANIM = { on:false, t:99, seq:0, n:1 };
+let animRAF = 0;            // la animación que se está viendo en la vista previa
+let armandoVideo = false;   // mientras se arma el MP4, draw() no toca nada
+const ANIM_ARRANQUE = 0.35, ANIM_DUR = 0.55, ANIM_TOPE = 3.0;
+const ease = p => 1 - Math.pow(1 - p, 3);
+const animRetardo = () =>
+  Math.min(0.07, (ANIM_TOPE - ANIM_ARRANQUE - ANIM_DUR) / Math.max(ANIM.n - 1, 1));
+
+// un elemento entra: aparece, sube 28 px y crece de 94% a 100%. `fn(e)` recibe el avance
+// (0..1) para lo que cuenta hacia arriba. `orden` reemplaza el turno cuando el orden de
+// dibujo no es el orden en que conviene que entre (Quiniela: fila por fila, no columna).
+function aparecer(cx, cy, fn, orden){
+  const i = orden ?? ANIM.seq;
+  ANIM.seq++;
+  if (!ANIM.on){ fn(1); return; }
+  const p = Math.max(0, Math.min(1, (ANIM.t - ANIM_ARRANQUE - i * animRetardo()) / ANIM_DUR));
+  if (p <= 0) return;
+  const e = ease(p), s = 0.94 + 0.06 * e;
+  ctx.save();
+  ctx.globalAlpha *= e;
+  ctx.translate(cx, cy + (1 - e) * 28); ctx.scale(s, s); ctx.translate(-cx, -cy);
+  fn(e);
+  ctx.restore();
+}
+
+// el marco de la pieza (título, chips, tarjetas, rótulos) entra junto en el primer tramo
+function marco(fn){
+  if (!ANIM.on){ fn(); return; }
+  ctx.save();
+  ctx.globalAlpha *= ease(Math.min(1, ANIM.t / ANIM_ARRANQUE));
+  fn();
+  ctx.restore();
+}
+
+// "$ 8.000.000.000 MILLONES" a mitad de camino → "$ 4.000.000.000 MILLONES". Solo toca
+// los montos con signo $; el resto del texto queda igual.
+function contarTexto(s, e){
+  if (e >= 1) return s;
+  return String(s).replace(/\$ ([\d.]+)/g, (_, d) =>
+    '$ ' + String(Math.round(Number(d.replace(/\./g, '')) * e)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
+}
+
+// tarjeta blanca con sombra suave: la pieza base del diseño claro
+function sombra(on){
+  ctx.shadowColor = on ? 'rgba(16,35,26,0.09)' : 'transparent';
+  ctx.shadowBlur = on ? 34 : 0;
+  ctx.shadowOffsetY = on ? 10 : 0;
+}
+function tarjeta(x, y, w, h, r, color){
+  sombra(true);
+  ctx.fillStyle = color || T.card;
+  rr(x, y, w, h, r); ctx.fill();
+  sombra(false);
+}
+
+// "QUINI 6" → "Quini 6", "POZO DE LA QUINIELA" → "Pozo de la Quiniela": el nombre grande
+// del juego va con mayúscula inicial, y los conectores en minúscula salvo al principio
+const CONECTORES = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'y', 'a', 'en']);
+function tituloCaso(s){
+  return String(s || '').toLowerCase().split(/(\s+)/).map((p, i) =>
+    (i > 0 && CONECTORES.has(p)) || !p.trim() ? p : p.charAt(0).toUpperCase() + p.slice(1)).join('');
+}
 
 // "8, 9-12 21" → ['08','09','12','21','','']
 // digitos = 2 para los juegos de bolillero, 4 para la Quiniela.
@@ -665,62 +784,59 @@ function pintarBarraGuardado(){
 // acompaña al color elegido en vez de quedarse verde. OJO: ese rótulo se apoya directo
 // sobre el fondo oscuro de la pieza, no sobre la caja — por eso en la variante negra va
 // claro y no negro, que sobre grafito sería invisible.
+/* Color de los números, sobre las tarjetas claras. Cada opción define juntos el número,
+   la caja (relleno), la bolilla de los cartones y el rótulo del grupo, porque no son
+   independientes: "negro" es la única que da vuelta la caja a oscura para que se lea.  */
 const COLORES_NUM = {
-  verde:    { nombre: 'Verde (el de siempre)', texto: '#FFFFFF', borde: '#0E6E4B', relleno: '#232323', etiqueta: '#14915F' },
-  amarillo: { nombre: 'Amarillo',               texto: '#E8B923', borde: '#E8B923', relleno: '#232323', etiqueta: '#E8B923' },
-  blanco:   { nombre: 'Blanco',                 texto: '#FFFFFF', borde: '#FFFFFF', relleno: '#232323', etiqueta: '#FFFFFF' },
-  rojo:     { nombre: 'Rojo',                   texto: '#E5484D', borde: '#E5484D', relleno: '#232323', etiqueta: '#E5484D' },
-  negro:    { nombre: 'Negro',                  texto: '#101010', borde: '#101010', relleno: '#EDEDED', etiqueta: '#EDEDED' },
+  verde:    { nombre: 'Verde (el de siempre)', texto: '#0B5A3D', relleno: '#E3F1E9', bolilla: '#FFFFFF', etiqueta: '#0E6E4B' },
+  amarillo: { nombre: 'Amarillo',               texto: '#5A4B05', relleno: '#FBF0BF', bolilla: '#FBF0BF', etiqueta: '#8A6D12' },
+  blanco:   { nombre: 'Neutro',                 texto: '#10231A', relleno: '#EEF0EC', bolilla: '#FFFFFF', etiqueta: '#5B6A61' },
+  rojo:     { nombre: 'Rojo',                   texto: '#B4232A', relleno: '#FBE4E4', bolilla: '#FFFFFF', etiqueta: '#B4232A' },
+  negro:    { nombre: 'Negro',                  texto: '#FFFFFF', relleno: '#10231A', bolilla: '#10231A', etiqueta: '#10231A' },
 };
 const colorNumActual = () => COLORES_NUM[app.colorNumeros] || COLORES_NUM.verde;
 
-/* Fondos de la pieza.
-   Cada preset declara TODO lo que se apoya directo sobre el fondo, porque al
-   cambiar de claro a oscuro hay que dar vuelta los colores de texto o se pierden.
-   Los bloques de contenido (chips, tablas, celdas) son oscuros en todos los casos,
-   así que no dependen del preset.                                                 */
+/* Fondos de la pieza — todos claros desde el 13/10/2026.
+   Las claves (verde, mixto, amarillo, grafito) son las de antes a propósito: así lo que
+   cada compu tenía guardado sigue abriendo, solo que ahora se ve en su versión clara.
+   Cada preset declara lo que se apoya directo sobre el fondo (título, rótulo, leyenda);
+   las tarjetas son blancas en todos.                                                   */
 const FONDOS = {
   verde: {
-    nombre: 'Verde',
-    base: '#181818',
-    glows: [ { c:[20,145,95], a:.26, x:.5, y:.17, r:.72 } ],
-    bar: [[0,'#F3D320'],[0.34,'#B9C22B'],[0.62,'#4FA83A'],[1,'#0E6E4B']],
-    titulo: '#15301F', plataforma: '#0E6E4B',
-    legal: '#B8B8B8', rayaLegal: '#14915F',
+    nombre: 'Claro',
+    base: '#E9ECE6',
+    glows: [ { c:[14,110,75], a:.07, x:.5, y:.10, r:.85 } ],
+    titulo: '#10231A', sub: '#0E6E4B',
+    legal: '#5B6A61', rayaLegal: 'rgba(16,35,26,0.12)',
   },
   mixto: {
-    nombre: 'Verde y amarillo',
-    base: '#181818',
-    glows: [ { c:[20,145,95], a:.30, x:.24, y:.16, r:.62 },
-             { c:[233,185,35], a:.24, x:.80, y:.20, r:.60 } ],
-    bar: [[0,'#F3D320'],[0.30,'#C9C227'],[0.60,'#5EAE38'],[1,'#0E6E4B']],
-    titulo: '#15301F', plataforma: '#0E6E4B',
-    legal: '#C4C0A8', rayaLegal: '#9BAE2B',
+    nombre: 'Claro verdoso',
+    base: '#DFEBE3',
+    glows: [ { c:[14,110,75], a:.10, x:.2, y:.12, r:.70 },
+             { c:[243,211,32], a:.08, x:.85, y:.18, r:.60 } ],
+    titulo: '#10231A', sub: '#0E6E4B',
+    legal: '#4F6157', rayaLegal: 'rgba(16,35,26,0.14)',
   },
   amarillo: {
-    nombre: 'Amarillo',
-    base: '#1C1806',
-    glows: [ { c:[233,185,35], a:.34, x:.5, y:.17, r:.74 },
-             { c:[243,211,32], a:.16, x:.5, y:.62, r:.80 } ],
-    bar: [[0,'#F3D320'],[0.40,'#D9C41F'],[1,'#8A6D12']],
-    titulo: '#1C1806', plataforma: '#0E6E4B',
-    legal: '#C9BE86', rayaLegal: '#E8B923',
+    nombre: 'Claro cálido',
+    base: '#F1EEE2',
+    glows: [ { c:[243,211,32], a:.14, x:.5, y:.12, r:.80 } ],
+    titulo: '#1C1806', sub: '#0E6E4B',
+    legal: '#6A6450', rayaLegal: 'rgba(28,24,6,0.14)',
   },
   grafito: {
-    nombre: 'Grafito, sin color',
-    base: '#181818',
-    glows: [ { c:[120,120,120], a:.13, x:.5, y:.17, r:.70 } ],
-    bar: [[0,'#3A3A3A'],[1,'#242424']],
-    titulo: '#FFFFFF', plataforma: '#E8B923',
-    legal: '#B8B8B8', rayaLegal: '#7A7A7A',
+    nombre: 'Blanco',
+    base: '#F7F8F5',
+    glows: [],
+    titulo: '#10231A', sub: '#0E6E4B',
+    legal: '#5B6A61', rayaLegal: 'rgba(16,35,26,0.10)',
   },
   imagen: {
     nombre: 'Imagen propia',
-    base: '#181818',
+    base: '#E9ECE6',
     glows: [],
-    bar: [[0,'rgba(243,211,32,0.93)'],[0.34,'rgba(185,194,43,0.93)'],[0.62,'rgba(79,168,58,0.93)'],[1,'rgba(14,110,75,0.93)']],
-    titulo: '#15301F', plataforma: '#0E6E4B',
-    legal: '#DCDCDC', rayaLegal: '#14915F',
+    titulo: '#10231A', sub: '#0E6E4B',
+    legal: '#3F4D45', rayaLegal: 'rgba(16,35,26,0.16)',
   },
 };
 
@@ -736,31 +852,25 @@ function drawFondo(){
     const k = Math.max(W / im.naturalWidth, H / im.naturalHeight);
     const dw = im.naturalWidth * k, dh = im.naturalHeight * k;
     ctx.drawImage(im, (W - dw)/2, (H - dh)/2, dw, dh);
-    ctx.fillStyle = `rgba(10,10,10,${app.oscurecer})`;   // velo: sin esto no se lee nada encima
+    // velo claro: sin esto el texto oscuro no se lee sobre una foto
+    ctx.fillStyle = `rgba(233,236,230,${app.oscurecer})`;
     ctx.fillRect(0, 0, W, H);
   }
 
   F.glows.forEach(g => {
     const gr = ctx.createRadialGradient(W*g.x, H*g.y, 0, W*g.x, H*g.y, W*g.r);
-    gr.addColorStop(0,   `rgba(${g.c.join(',')},${g.a})`);
-    gr.addColorStop(0.62,`rgba(${g.c.join(',')},${g.a*0.18})`);
-    gr.addColorStop(1,   `rgba(${g.c.join(',')},0)`);
+    gr.addColorStop(0, `rgba(${g.c.join(',')},${g.a})`);
+    gr.addColorStop(1, `rgba(${g.c.join(',')},0)`);
     ctx.fillStyle = gr;
     ctx.fillRect(0, 0, W, H);
   });
 }
 
-/* Lockup LA33 + LA3CE.
-   Los wordmarks van embebidos en blanco sobre transparente y se tiñen acá con
-   source-in, así el mismo recorte sirve para las dos variantes y queda nítido
-   a cualquier tamaño. Las letras son los archivos originales, sin redibujar.
-
-   A · letras intactas   — colores originales sobre degradé verde→amarillo
-   B · recoloreado       — LA33 amarillo y LA3CE verde sobre grafito           */
-const MARCA = {
-  A: { c33:'#0D151F', c3ce:'#343837', divisor:'rgba(13,21,31,0.45)'   },
-  B: { c33:'#F3D320', c3ce:'#62BB47', divisor:'rgba(255,255,255,0.30)' },
-};
+/* Lockup LA33 + LA3CE, con las letras en sus colores originales (la variante A de antes),
+   apoyado directo sobre el fondo claro. Los wordmarks van embebidos en blanco sobre
+   transparente y se tiñen acá con source-in: son los archivos originales, sin redibujar.
+   Se dibuja por alto: LA3CE va 12% más grande porque su tipografía es más liviana.      */
+const MARCA = { c33:'#0D151F', c3ce:'#343837', divisor:'rgba(13,21,31,0.30)' };
 
 const _tinte = document.createElement('canvas');
 function tenir(img, color, w, h){
@@ -775,153 +885,116 @@ function tenir(img, color, w, h){
   return _tinte;
 }
 
-function drawLockup(x, y, w, h, r, variante){
-  const M = MARCA[variante] || MARCA.A;
-  ctx.save();
-  rr(x, y, w, h, r);
-  ctx.clip();
+function drawLockup(x, y, h){
+  if (!(wordLa33.complete && wordLa33.naturalWidth && wordLa3ce.complete && wordLa3ce.naturalWidth)) return;
+  const a33 = h, a3ce = h * 1.12;
+  const w33  = wordLa33.naturalWidth  * (a33  / wordLa33.naturalHeight);
+  const w3ce = wordLa3ce.naturalWidth * (a3ce / wordLa3ce.naturalHeight);
+  const gap = h * 0.5, cy = y + h / 2;
 
-  if (variante === 'B'){
-    // panel grafito propio: las letras van recoloreadas y necesitan fondo oscuro
-    ctx.fillStyle = C.grafito;
-    ctx.fillRect(x, y, w, h);
-    const g1 = ctx.createRadialGradient(x+w*.24, y+h*.5, 0, x+w*.24, y+h*.5, w*.46);
-    g1.addColorStop(0, 'rgba(243,211,32,0.32)'); g1.addColorStop(1, 'rgba(243,211,32,0)');
-    ctx.fillStyle = g1; ctx.fillRect(x, y, w, h);
-    const g2 = ctx.createRadialGradient(x+w*.76, y+h*.5, 0, x+w*.76, y+h*.5, w*.46);
-    g2.addColorStop(0, 'rgba(98,187,71,0.32)'); g2.addColorStop(1, 'rgba(98,187,71,0)');
-    ctx.fillStyle = g2; ctx.fillRect(x, y, w, h);
-  }
-  // en la variante A no se pinta nada: los logos van directo sobre el degradé de la barra
-
-  if (wordLa33.complete && wordLa33.naturalWidth && wordLa3ce.complete && wordLa3ce.naturalWidth){
-    const alto = h * 0.46;
-    const a33  = alto, a3ce = alto * 1.12;      // LA3CE +12%: su tipografía es más liviana
-    const w33  = wordLa33.naturalWidth  * (a33  / wordLa33.naturalHeight);
-    const w3ce = wordLa3ce.naturalWidth * (a3ce / wordLa3ce.naturalHeight);
-    const gap  = w * 0.075;
-    const tot  = w33 + gap + w3ce;
-    const x0   = x + w/2 - tot/2, cy = y + h/2;
-
-    ctx.drawImage(tenir(wordLa33, M.c33, Math.round(w33), Math.round(a33)),
-                  x0, cy - a33/2, w33, a33);
-
-    ctx.strokeStyle = M.divisor;
-    ctx.lineWidth = Math.max(1.5, w * 0.0035);
-    ctx.beginPath();
-    ctx.moveTo(x0 + w33 + gap/2, cy - alto*0.55);
-    ctx.lineTo(x0 + w33 + gap/2, cy + alto*0.55);
-    ctx.stroke();
-
-    ctx.drawImage(tenir(wordLa3ce, M.c3ce, Math.round(w3ce), Math.round(a3ce)),
-                  x0 + w33 + gap, cy - a3ce/2, w3ce, a3ce);
-  }
-  ctx.restore();
+  ctx.drawImage(tenir(wordLa33, MARCA.c33, Math.round(w33), Math.round(a33)), x, cy - a33/2, w33, a33);
+  ctx.strokeStyle = MARCA.divisor;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x + w33 + gap/2, cy - h*0.55);
+  ctx.lineTo(x + w33 + gap/2, cy + h*0.55);
+  ctx.stroke();
+  ctx.drawImage(tenir(wordLa3ce, MARCA.c3ce, Math.round(w3ce), Math.round(a3ce)), x + w33 + gap, cy - a3ce/2, w3ce, a3ce);
 }
 
+/* Encabezado: ocupa la misma franja que la barra de antes (y 280–440), así ninguna
+   plantilla tuvo que mover su contenido. Arriba el lockup a la izquierda y el título como
+   rótulo verde a la derecha; abajo el nombre del juego, grande.                          */
 function drawHeader(titulo, plataforma){
   const F = fondoActual();
-  // el degradé recorre la barra ENTERA y sigue dentro del chip, para que se lea
-  // como un solo campo de color y no como una barra con un recuadro pegado
-  const hg = ctx.createLinearGradient(HEAD.x, 0, HEAD.x + HEAD.w, 0);
-  F.bar.forEach(([pos, col]) => hg.addColorStop(pos, col));
-  ctx.fillStyle = hg;
-  rr(HEAD.x, HEAD.y, HEAD.w, HEAD.h, HEAD.r);
-  ctx.fill();
+  marco(() => {
+    drawLockup(76, 284, 44);
 
-  drawLockup(CHIP.x, CHIP.y, CHIP.w, CHIP.h, CHIP.r, app.marca);
+    ctx.textBaseline = 'alphabetic';
+    const t = (titulo || '').toUpperCase();
+    ctx.fillStyle = F.sub;
+    ctx.font = `700 ${fit(t, 560, 22, 700)}px ${FF}`;
+    tracked(t, 1004, 316, 4, 'right');
 
-  ctx.textBaseline = 'alphabetic';
-  ctx.textAlign = 'left';
-
-  // el titulo se achica solo: ahora comparte la barra con un lockup mas ancho
-  const t = (titulo || '').toUpperCase();
-  ctx.fillStyle = F.titulo;
-  ctx.font = `900 ${fit(t, CHIP.x - 110 - 56, 44, 900)}px ${FF}`;
-  tracked(t, 110, 358, 1.5, 'left');
-
-  ctx.fillStyle = F.plataforma;
-  ctx.font = `800 30px ${FF}`;
-  tracked((plataforma || '').toUpperCase(), 111, 404, 4, 'left');
+    const p = tituloCaso(plataforma);
+    ctx.fillStyle = F.titulo;
+    ctx.font = `900 ${fit(p, 900, 108, 900)}px ${FF}`;
+    tracked(p, 72, 428, -2, 'left');
+  });
 }
 
 function drawPieLegal(texto){
   const F = fondoActual();
 
-  // sobre una imagen, la leyenda puede caer encima de una zona clara y desaparecer.
-  // Es obligatoria por Res. 446/2025, así que lleva su propio velo y no depende
-  // de cuánto oscurecimiento general haya elegido la persona.
-  //
-  // Se desvanece en las DOS puntas (entra de a poco arriba, se disuelve de a poco abajo) en
-  // vez de cortar de golpe: un borde duro contra una foto clara se nota como un error de
-  // recorte. Con degradado no hay corte posible, sea cual sea la foto de fondo.
+  // sobre una foto, la leyenda puede caer encima de una zona cargada y perderse. Es
+  // obligatoria por Res. 446/2025, así que lleva su propio velo, desvanecido en las dos
+  // puntas para que no se note un corte contra la foto.
   if (app.fondo === 'imagen' && app.fondoImg){
     const arriba = LEGAL.y - 96, abajo = LEGAL.y + LEGAL.alto + 96;
     const v = ctx.createLinearGradient(0, arriba, 0, abajo);
-    v.addColorStop(0,    'rgba(12,12,12,0)');
-    v.addColorStop(0.30, 'rgba(12,12,12,0.82)');
-    v.addColorStop(0.70, 'rgba(12,12,12,0.82)');
-    v.addColorStop(1,    'rgba(12,12,12,0)');
+    v.addColorStop(0,    'rgba(233,236,230,0)');
+    v.addColorStop(0.30, 'rgba(233,236,230,0.88)');
+    v.addColorStop(0.70, 'rgba(233,236,230,0.88)');
+    v.addColorStop(1,    'rgba(233,236,230,0)');
     ctx.fillStyle = v;
     ctx.fillRect(0, arriba, W, abajo - arriba);
   }
 
-  const ag = ctx.createLinearGradient(70, 0, 1010, 0);
-  ag.addColorStop(0, F.rayaLegal);
-  ag.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = ag;
-  ctx.fillRect(70, LEGAL.y, 940, 3);
+  ctx.fillStyle = F.rayaLegal;
+  ctx.fillRect(76, LEGAL.y, 928, 2);
 
   ctx.strokeStyle = F.legal;
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.arc(99, LEGAL.y + 48, 28, 0, Math.PI * 2);
+  ctx.arc(104, LEGAL.y + 50, 28, 0, Math.PI * 2);
   ctx.stroke();
   ctx.fillStyle = F.legal;
   ctx.font = `800 23px ${FF}`;
   ctx.textAlign = 'center';
-  ctx.fillText('18', 99, LEGAL.y + 57);
+  ctx.fillText('18', 104, LEGAL.y + 59);
 
   ctx.textAlign = 'left';
   ctx.font = `500 19px ${FF}`;
-  wrap(texto, 848).slice(0, 3)
-     .forEach((ln, i) => ctx.fillText(ln, 158, LEGAL.y + 42 + i * 27));
+  wrap(texto, 840).slice(0, 3)
+     .forEach((ln, i) => ctx.fillText(ln, 160, LEGAL.y + 44 + i * 27));
 }
 
-// un grupo de números: etiqueta verde + chips, envueltos en filas.
-// Compartido por Quini, Loto Resultados y Telekino. Devuelve el alto que ocupó.
+// un grupo de números: tarjeta blanca con el rótulo arriba y las cajas adentro.
+// Compartido por Quini, Loto Resultados y Telekino. Devuelve el alto del contenido
+// (la tarjeta sobresale 14 px arriba y 16 abajo de ese alto).
 function drawGrupoNumeros(y0, nombre, nums, cfg){
-  const { cantidad = 6, columnas = 6, chipH = 92, fontNum = 46, gap = 14 } = cfg || {};
-  const ANCHO = 940, X0 = 70;
+  const { cantidad = 6, columnas = 6, chipH = 84, fontNum = 50, gap = 12 } = cfg || {};
+  const PAD = 26, X0 = 70 + PAD, ANCHO = 940 - PAD * 2;
   const chipW = (ANCHO - (columnas - 1) * gap) / columnas;
   const filas = Math.ceil(cantidad / columnas);
+  const alto = 40 + filas * chipH + (filas - 1) * gap;
 
   const CN = colorNumActual();
-  ctx.fillStyle = CN.etiqueta;
-  ctx.font = `700 ${fit((nombre || '').toUpperCase(), 800, 22, 700)}px ${FF}`;
-  tracked((nombre || '').toUpperCase(), 76, y0 + 24, 4, 'left');
+  const nom = (nombre || '').toUpperCase();
+  marco(() => {
+    tarjeta(70, y0 - 14, 940, alto + 30, 30);
+    ctx.fillStyle = CN.etiqueta;
+    ctx.font = `700 ${fit(nom, 780, 22, 700)}px ${FF}`;
+    tracked(nom, X0 + 2, y0 + 20, 4, 'left');
+  });
 
   parseNumeros(nums, cantidad).forEach((n, j) => {
     const col = j % columnas, fila = Math.floor(j / columnas);
     const x = X0 + col * (chipW + gap);
     const y = y0 + 40 + fila * (chipH + gap);
-
-    ctx.fillStyle = CN.relleno;
-    rr(x, y, chipW, chipH, 18);
-    ctx.fill();
-    ctx.strokeStyle = n ? CN.borde : '#2c2c2c';
-    ctx.lineWidth = 2.5;
-    rr(x, y, chipW, chipH, 18);
-    ctx.stroke();
-
-    ctx.fillStyle = n ? CN.texto : '#3a3a3a';
-    ctx.font = `900 ${fontNum}px ${FF}`;
-    ctx.textAlign = 'center';
-    ctx.fillText(n || '–', x + chipW/2, y + chipH/2 + fontNum*0.35);
-    ctx.textAlign = 'left';
+    aparecer(x + chipW/2, y + chipH/2, () => {
+      ctx.fillStyle = n ? CN.relleno : T.vacio;
+      rr(x, y, chipW, chipH, 20);
+      ctx.fill();
+      ctx.fillStyle = n ? CN.texto : T.suave;
+      ctx.font = `900 ${fontNum}px ${FF}`;
+      ctx.textAlign = 'center';
+      ctx.fillText(n || '–', x + chipW/2, y + chipH/2 + fontNum*0.35);
+      ctx.textAlign = 'left';
+    });
   });
 
-  return 40 + filas * chipH + (filas - 1) * gap;
+  return alto;
 }
 
 // varios bloques de números de cantidad LIBRE, apilados dentro de una banda. Telebingo
@@ -1005,20 +1078,28 @@ function drawCarton(bloques, top, bottom, cfg){
     // el rótulo va centrado como los números: acá las filas están centradas (no alineadas
     // a un margen como en Quini), y una etiqueta pegada a la izquierda quedaba suelta
     const fLab = Math.max(m(22), 11);
-    ctx.fillStyle = CN.etiqueta;
-    ctx.font = `700 ${fit((b.nombre || '').toUpperCase(), 800, fLab, 700)}px ${FF}`;
-    tracked((b.nombre || '').toUpperCase(), 540, y + m(24), 4, 'center');
+    const yLab = y;
+    marco(() => {
+      ctx.fillStyle = CN.etiqueta;
+      ctx.font = `700 ${fit((b.nombre || '').toUpperCase(), 800, fLab, 700)}px ${FF}`;
+      tracked((b.nombre || '').toUpperCase(), 540, yLab + m(24), 4, 'center');
+    });
     y += m(label);
 
     if (esTexto[i]){
       const fNum = Math.max(m(lineaFont), 10);
       const lh = Math.max(m(lineaLineH), 14);
       const rens = renglonesTexto(i, s);
-      ctx.font = `800 ${fNum}px ${FF}`;
-      ctx.fillStyle = listas[i].length ? CN.texto : '#5a5a5a';
-      ctx.textAlign = 'center';
-      rens.forEach((ln, li) => ctx.fillText(ln, 540, y + li * lh + fNum * 0.78));
-      ctx.textAlign = 'left';
+      rens.forEach((ln, li) => {
+        const yl = y + li * lh;
+        aparecer(540, yl + lh / 2, () => {
+          ctx.font = `800 ${fNum}px ${FF}`;
+          ctx.fillStyle = listas[i].length ? CN.texto : T.suave;
+          ctx.textAlign = 'center';
+          ctx.fillText(ln, 540, yl + fNum * 0.78);
+          ctx.textAlign = 'left';
+        });
+      });
       y += rens.length * lh;
     } else {
       const d = m(diamBase), g = m(gap), fNum = Math.max(m(fontNum), 10);
@@ -1031,17 +1112,21 @@ function drawCarton(bloques, top, bottom, cfg){
         for (let c = 0; c < cuantos; c++, k++){
           const cx = inicio + c * (d + g) + d / 2;
           const cy = y + fila * (d + g) + d / 2;
-          ctx.beginPath();
-          ctx.arc(cx, cy, d / 2, 0, Math.PI * 2);
-          ctx.fillStyle = CN.relleno;
-          ctx.fill();
-          ctx.strokeStyle = CN.borde; ctx.lineWidth = Math.max(m(2.5), 1.5);
-          ctx.stroke();
-          ctx.fillStyle = CN.texto;
-          ctx.font = `900 ${fNum}px ${FF}`;
-          ctx.textAlign = 'center';
-          ctx.fillText(listas[i][k], cx, cy + fNum * 0.34);
-          ctx.textAlign = 'left';
+          const num = listas[i][k];
+          // bolilla plana con sombra suave: sobre el fondo claro se lee sin borde
+          aparecer(cx, cy, () => {
+            sombra(true);
+            ctx.beginPath();
+            ctx.arc(cx, cy, d / 2, 0, Math.PI * 2);
+            ctx.fillStyle = CN.bolilla;
+            ctx.fill();
+            sombra(false);
+            ctx.fillStyle = CN.texto;
+            ctx.font = `900 ${fNum}px ${FF}`;
+            ctx.textAlign = 'center';
+            ctx.fillText(num, cx, cy + fNum * 0.34);
+            ctx.textAlign = 'left';
+          });
         }
       });
       y += (filas[i] > 0 ? filas[i] * d + (filas[i] - 1) * g : 0);
@@ -1050,9 +1135,9 @@ function drawCarton(bloques, top, bottom, cfg){
   });
 }
 
-// chips redondeados centrados sobre la grilla (sorteo, fecha, período…).
-// Quini, Loto y Telekino traen su propia copia de esto de antes de que existiera el
-// helper; las plantillas nuevas lo usan de acá.
+// chips redondeados centrados (sorteo, fecha, período…): píldora blanca con borde verde.
+// El color que pasa cada plantilla es el de antes (amarillo = destacado, blanco = normal);
+// en claro el destacado va en verde y el resto en el tono del texto.
 function drawChipsDuo(y, items, cfg){
   const { font = 24, sp = 4, pad = 56, min = 170, alto = 50, tracking = 3, gap = 16 } = cfg || {};
   ctx.font = `700 ${font}px ${FF}`;
@@ -1062,52 +1147,78 @@ function drawChipsDuo(y, items, cfg){
   let x = 540 - total / 2;
 
   items.forEach(([t, color], i) => {
-    const w = anchos[i];
-    ctx.fillStyle = C.grafito2;
-    rr(x, y, w, alto, alto / 2); ctx.fill();
-    ctx.strokeStyle = C.amarillo; ctx.lineWidth = 2;
-    rr(x, y, w, alto, alto / 2); ctx.stroke();
-    ctx.fillStyle = color;
-    ctx.font = `700 ${font}px ${FF}`;
-    tracked(t, x + w / 2, y + alto / 2 + font * 0.36, tracking, 'center');
+    const w = anchos[i], x0 = x;
+    marco(() => {
+      ctx.fillStyle = T.card;
+      rr(x0, y, w, alto, alto / 2); ctx.fill();
+      ctx.strokeStyle = T.verde; ctx.lineWidth = 2.5;
+      rr(x0, y, w, alto, alto / 2); ctx.stroke();
+      ctx.fillStyle = color === C.amarillo ? T.verde : T.fg;
+      ctx.font = `700 ${font}px ${FF}`;
+      tracked(t, x0 + w / 2, y + alto / 2 + font * 0.36, tracking, 'center');
+    });
     x += w + gap;
   });
 }
 
-// panel "próximo sorteo / pozo" — compartido entre Quini, Loto Resultados y Telekino
+// panel "próximo sorteo / pozo" — tarjeta verde llena; el pozo cuenta hacia arriba en el video
 function drawPanelPozo(y0, titulo, fecha, subLabel, monto){
   const h = 278;
-  ctx.fillStyle = C.grafito2;
-  rr(70, y0, 940, h, 24);
-  ctx.fill();
-  ctx.strokeStyle = C.verde;
-  ctx.lineWidth = 3;
-  rr(70, y0, 940, h, 24);
-  ctx.stroke();
+  aparecer(540, y0 + h / 2, e => {
+    tarjeta(70, y0, 940, h, 36, T.verde);
 
-  ctx.fillStyle = C.verdeClaro;
-  ctx.font = `700 22px ${FF}`;
-  tracked(titulo, 540, y0 + 50, 6, 'center');
+    ctx.fillStyle = 'rgba(255,255,255,0.78)';
+    ctx.font = `700 22px ${FF}`;
+    tracked(titulo, 540, y0 + 50, 6, 'center');
 
-  const pf = (fecha || '').toUpperCase();
-  ctx.fillStyle = C.blanco;
-  ctx.font = `800 ${fit(pf, 860, 42, 800)}px ${FF}`;
-  tracked(pf, 540, y0 + 108, 1.5, 'center');
+    const pf = (fecha || '').toUpperCase();
+    ctx.fillStyle = C.blanco;
+    ctx.font = `800 ${fit(pf, 860, 42, 800)}px ${FF}`;
+    tracked(pf, 540, y0 + 108, 1.5, 'center');
 
-  ctx.fillStyle = C.gris;
-  ctx.font = `700 20px ${FF}`;
-  tracked((subLabel || '').toUpperCase(), 540, y0 + 160, 5, 'center');
+    ctx.fillStyle = 'rgba(255,255,255,0.78)';
+    ctx.font = `700 20px ${FF}`;
+    tracked((subLabel || '').toUpperCase(), 540, y0 + 160, 5, 'center');
 
-  ctx.fillStyle = C.amarillo;
-  ctx.font = `900 ${fit(monto, 860, 86, 900)}px ${FF}`;
-  ctx.textAlign = 'center';
-  ctx.fillText(monto, 540, y0 + 244);
-  ctx.textAlign = 'left';
+    ctx.fillStyle = T.amarillo;
+    ctx.font = `900 ${fit(monto, 860, 86, 900)}px ${FF}`;   // el tamaño sale del monto final
+    ctx.textAlign = 'center';
+    ctx.fillText(contarTexto(monto, e), 540, y0 + 244);
+    ctx.textAlign = 'left';
+  });
+}
+
+// chip de título de una tabla ("GANADORES", "1ª RONDA"…): píldora blanca, borde y texto verde
+function drawChipTitulo(titulo, y, alto, fLab, minW){
+  ctx.font = `800 ${fLab}px ${FF}`;
+  const w = Math.max([...titulo].reduce((a, ch) => a + ctx.measureText(ch).width + 2, 0) + alto, minW);
+  const lx = 540 - w / 2;
+  ctx.fillStyle = T.card;
+  rr(lx, y, w, alto, alto / 2); ctx.fill();
+  ctx.strokeStyle = T.verde; ctx.lineWidth = 2.5;
+  rr(lx, y, w, alto, alto / 2); ctx.stroke();
+  ctx.fillStyle = T.verde;
+  tracked(titulo, 540, y + alto / 2 + fLab * 0.36, 2, 'center');
+}
+
+// cabecera de tabla: banda verde clara pegada arriba de la tarjeta, rótulos en verde
+function drawCabeceraTabla(x, y, w, h, r, textos, centros, anchos, fHead){
+  ctx.save();
+  rr(x, y, w, h + r, r); ctx.clip();
+  ctx.fillStyle = T.tile;
+  ctx.fillRect(x, y, w, h);
+  ctx.restore();
+  ctx.fillStyle = T.verde;
+  textos.forEach((t, i) => {
+    ctx.font = `800 ${fit(t, anchos[i] - 16, fHead, 800)}px ${FF}`;
+    tracked(t, centros[i], y + h / 2 + fHead * 0.34, 2, 'center');
+  });
 }
 
 // tabla plana de N columnas con chip de título opcional — el molde de la tabla de
 // Telebingo ganadores, generalizado para Mini Bingo y los premios al cartón de Telekino.
-// cols  = [{ t:'CUPÓN', w:0.3, color:C.amarillo, peso:900 }]  (w = fracción del ancho)
+// cols  = [{ t:'CUPÓN', w:0.3, color:C.amarillo, peso:900 }]  (w = fracción del ancho;
+//         el color es el de la paleta vieja y se traduce con tono())
 // filas = [[v1, v2, …]]  ya formateadas (los montos pasan por fmt() antes de llegar acá)
 // Se pega a `top` y se achica sola si no entra en `bottom`. Devuelve el y donde terminó.
 function drawTabla(cols, filas, top, bottom, cfg){
@@ -1122,7 +1233,7 @@ function drawTabla(cols, filas, top, bottom, cfg){
   let s = Math.min(1, disponible / Math.max(alto(1), 1));
   while (s > 0.2 && alto(s) > disponible) s -= 0.005;
   const m = k => Math.round(k * s);
-  const HEADER_H = m(base.header), ROW_H = m(base.row);
+  const HEADER_H = m(base.header), ROW_H = m(base.row), R = m(22);
 
   const anchos = cols.map(c => Math.round(ANCHO * c.w));
   const centros = (() => {
@@ -1134,88 +1245,69 @@ function drawTabla(cols, filas, top, bottom, cfg){
   let y = top;
 
   if (titulo){
-    const LABEL_H = m(base.label);
-    const fLab = Math.max(m(22), 11);
-    ctx.font = `800 ${fLab}px ${FF}`;
-    const wLabel = Math.max([...titulo].reduce((a, ch) => a + ctx.measureText(ch).width + 2, 0) + m(50), m(160));
-    const lx = 540 - wLabel / 2;
-    ctx.fillStyle = C.grafito2;
-    rr(lx, y, wLabel, LABEL_H, LABEL_H / 2); ctx.fill();
-    ctx.strokeStyle = C.amarillo; ctx.lineWidth = 2;
-    rr(lx, y, wLabel, LABEL_H, LABEL_H / 2); ctx.stroke();
-    ctx.fillStyle = C.amarillo;
-    tracked(titulo, 540, y + LABEL_H / 2 + fLab * 0.36, 2, 'center');
+    const LABEL_H = m(base.label), yT = y;
+    marco(() => drawChipTitulo(titulo, yT, LABEL_H, Math.max(m(22), 11), m(160)));
     y += LABEL_H + m(base.gapLt);
   }
 
-  const hg = ctx.createLinearGradient(X, 0, X + ANCHO, 0);
-  hg.addColorStop(0, C.verde); hg.addColorStop(1, C.verdeClaro);
-  ctx.fillStyle = hg;
-  rr(X, y, ANCHO, HEADER_H, m(14)); ctx.fill();
-  ctx.fillStyle = C.blanco;
-  const fHead = Math.max(m(23), 10);
-  cols.forEach((c, i) => {
-    ctx.font = `800 ${fit(c.t, anchos[i] - 16, fHead, 800)}px ${FF}`;
-    tracked(c.t, centros[i], y + HEADER_H / 2 + fHead * 0.34, 2, 'center');
+  const tablaTop = y, tablaH = HEADER_H + nFilas * ROW_H;
+  marco(() => {
+    tarjeta(X, tablaTop, ANCHO, tablaH, R);
+    drawCabeceraTabla(X, tablaTop, ANCHO, HEADER_H, R, cols.map(c => c.t), centros, anchos, Math.max(m(23), 10));
   });
-  const tablaTop = y;
   y += HEADER_H;
 
   const fTxt = Math.max(m(29), 11);
   if (!filas.length){
-    ctx.fillStyle = C.grafito2;
-    ctx.fillRect(X, y, ANCHO, ROW_H);
-    ctx.fillStyle = C.gris;
-    ctx.font = `700 ${fTxt}px ${FF}`;
-    ctx.textAlign = 'center';
-    ctx.fillText(vacio, 540, y + ROW_H / 2 + fTxt * 0.34);
-    ctx.textAlign = 'left';
+    const yv = y;
+    aparecer(540, yv + ROW_H / 2, () => {
+      ctx.fillStyle = T.muted;
+      ctx.font = `700 ${fTxt}px ${FF}`;
+      ctx.textAlign = 'center';
+      ctx.fillText(vacio, 540, yv + ROW_H / 2 + fTxt * 0.34);
+      ctx.textAlign = 'left';
+    });
     y += ROW_H;
   }
   filas.forEach((fila, i) => {
-    ctx.fillStyle = i % 2 === 0 ? C.grafito2 : 'rgba(35,35,35,0.45)';
-    ctx.fillRect(X, y, ANCHO, ROW_H);
-    ctx.textAlign = 'center';
-    cols.forEach((c, j) => {
-      const t = (fila[j] || '–').toString().toUpperCase();
-      ctx.fillStyle = c.color || C.blanco;
-      const peso = c.peso || 700;
-      ctx.font = `${peso} ${fit(t, anchos[j] - 16, fTxt, peso)}px ${FF}`;
-      ctx.fillText(t, centros[j], y + ROW_H / 2 + fTxt * 0.34);
+    const yf = y;
+    aparecer(540, yf + ROW_H / 2, e => {
+      if (i > 0){ ctx.fillStyle = T.linea; ctx.fillRect(X + 24, yf, ANCHO - 48, 1.5); }
+      ctx.textAlign = 'center';
+      cols.forEach((c, j) => {
+        const t = (fila[j] || '–').toString().toUpperCase();
+        ctx.fillStyle = tono(c.color || C.blanco);
+        const peso = c.peso || 700;
+        ctx.font = `${peso} ${fit(t, anchos[j] - 16, fTxt, peso)}px ${FF}`;
+        ctx.fillText(contarTexto(t, e), centros[j], yf + ROW_H / 2 + fTxt * 0.34);
+      });
+      ctx.textAlign = 'left';
     });
-    ctx.textAlign = 'left';
     y += ROW_H;
   });
 
-  ctx.strokeStyle = C.verde; ctx.lineWidth = 2;
-  ctx.strokeRect(X, tablaTop, ANCHO, y - tablaTop);
   return y;
 }
 
-// panel compacto "próximo sorteo": la misma caja de drawPanelPozo pero en renglones de
-// etiqueta + valor, para cuando abajo de una tabla no entran los 278 px del panel grande.
+// panel compacto "próximo sorteo": la misma tarjeta verde de drawPanelPozo pero en renglones
+// de etiqueta + valor, para cuando abajo de una tabla no entran los 278 px del panel grande.
 // lineas = [['PRÓXIMO SORTEO', '14/09/2026 · 21:15'], …]. Devuelve el alto que ocupó.
 function drawPanelProximo(y0, lineas){
   const PASO = 60, h = 36 + PASO * lineas.length;
-  ctx.fillStyle = C.grafito2;
-  rr(70, y0, 940, h, 24);
-  ctx.fill();
-  ctx.strokeStyle = C.verde;
-  ctx.lineWidth = 3;
-  rr(70, y0, 940, h, 24);
-  ctx.stroke();
-
-  lineas.forEach(([etiqueta, valor], i) => {
-    const yb = y0 + 36 + PASO * i + 30;
-    ctx.fillStyle = C.gris;
-    ctx.font = `700 20px ${FF}`;
-    tracked((etiqueta || '').toUpperCase(), 110, yb, 4, 'left');
-    const v = (valor || '').toString().toUpperCase();
-    ctx.fillStyle = C.amarillo;
-    ctx.font = `800 ${fit(v, 600, 34, 800)}px ${FF}`;
-    ctx.textAlign = 'right';
-    ctx.fillText(v, 970, yb + 2);
-    ctx.textAlign = 'left';
+  aparecer(540, y0 + h / 2, e => {
+    tarjeta(70, y0, 940, h, 30, T.verde);
+    lineas.forEach(([etiqueta, valor], i) => {
+      const yb = y0 + 36 + PASO * i + 30;
+      ctx.fillStyle = 'rgba(255,255,255,0.78)';
+      ctx.font = `700 20px ${FF}`;
+      tracked((etiqueta || '').toUpperCase(), 110, yb, 4, 'left');
+      const v = (valor || '').toString().toUpperCase();
+      ctx.fillStyle = T.amarillo;
+      ctx.font = `800 ${fit(v, 600, 34, 800)}px ${FF}`;
+      ctx.textAlign = 'right';
+      ctx.fillText(contarTexto(v, e), 970, yb + 2);
+      ctx.textAlign = 'left';
+    });
   });
   return h;
 }
@@ -1263,7 +1355,8 @@ function nuevoLogoSticker(clave){
   const L = LOGOS[clave];
   if (!L) return null;
   const escala = Math.min(L.zonaW / L.w, L.zonaH / L.h);
-  return { img:L.img, x:540, y:160, esc:escala, rot:0, flip:false, op:0.5, esLogo:true };
+  // opacidad plena desde el diseño claro (13/10/2026): al 50% el logo se lavaba sobre el fondo
+  return { img:L.img, x:540, y:160, esc:escala, rot:0, flip:false, op:1, esLogo:true };
 }
 
 // cambia el logo de plataforma sin tocar los stickers que cargó la persona a mano
@@ -1571,19 +1664,21 @@ function drawStickers(P, exportando){
   P.estado.stickers.forEach((s, i) => {
     if (!s.img || !s.img.complete || !s.img.naturalWidth) return;
     const {w, h} = stkDims(s);
-    ctx.save();
-    ctx.globalAlpha = s.op ?? 1;
-    ctx.translate(s.x, s.y);
-    ctx.rotate(s.rot * Math.PI / 180);
-    ctx.scale(s.flip ? -1 : 1, 1);
-    ctx.drawImage(s.img, -w/2, -h/2, w, h);
-    ctx.restore();
+    marco(() => {
+      ctx.save();
+      ctx.globalAlpha *= s.op ?? 1;
+      ctx.translate(s.x, s.y);
+      ctx.rotate(s.rot * Math.PI / 180);
+      ctx.scale(s.flip ? -1 : 1, 1);
+      ctx.drawImage(s.img, -w/2, -h/2, w, h);
+      ctx.restore();
+    });
 
     if (!exportando && i === P.estado.stkSel){
       ctx.save();
       ctx.translate(s.x, s.y);
       ctx.rotate(s.rot * Math.PI / 180);
-      ctx.strokeStyle = C.amarillo;
+      ctx.strokeStyle = T.verde;   // el amarillo no se ve sobre el fondo claro
       ctx.lineWidth = 4;
       ctx.setLineDash([16, 12]);
       ctx.strokeRect(-w/2, -h/2, w, h);
@@ -1765,10 +1860,13 @@ const ganadores = {
       const r = rects[i];
       if (!r) return;
 
+      // cada juego entra como una tarjeta entera; el monto cuenta hacia arriba
+      aparecer(r.x + r.w/2, r.y + r.h/2, e => {
+      tarjeta(r.x, r.y, r.w, r.h, 24);
       ctx.save();
       rr(r.x, r.y, r.w, r.h, 24);
       ctx.clip();
-      ctx.fillStyle = C.grafito2;
+      ctx.fillStyle = '#DDE2DA';
       ctx.fillRect(r.x, r.y, r.w, r.h);
 
       if (it.img){
@@ -1776,7 +1874,7 @@ const ganadores = {
         const dw = it.img.naturalWidth * s, dh = it.img.naturalHeight * s;
         ctx.drawImage(it.img, r.x + r.w/2 + it.dx - dw/2, r.y + r.h/2 + it.dy - dh/2, dw, dh);
       } else {
-        ctx.strokeStyle = '#2c2c2c';
+        ctx.strokeStyle = '#CFD6CC';
         ctx.lineWidth = 2;
         for (let k = -r.h; k < r.w; k += 40){
           ctx.beginPath();
@@ -1784,7 +1882,7 @@ const ganadores = {
           ctx.lineTo(r.x + k + r.h, r.y + r.h);
           ctx.stroke();
         }
-        ctx.fillStyle = '#666';
+        ctx.fillStyle = T.muted;
         ctx.font = `800 ${Math.round(r.w * 0.045)}px ${FF}`;
         ctx.textAlign = 'center';
         ctx.fillText('SIN ARTE', r.x + r.w/2, r.y + r.h/2 - 30);
@@ -1809,21 +1907,17 @@ const ganadores = {
       ctx.fillStyle = C.amarillo;
       ctx.font = `900 ${sMon}px ${FF}`;
       ctx.textAlign = 'center';
-      ctx.fillText(mon, r.x + r.w/2, yMon);
+      ctx.fillText(contarTexto(mon, e), r.x + r.w/2, yMon);
 
       ctx.fillStyle = C.blanco;
       ctx.font = `800 ${sNom}px ${FF}`;
       tracked(nom, r.x + r.w/2, yMon - sMon - 12, 1.2, 'center');
       ctx.textAlign = 'left';
       ctx.restore();
-
-      ctx.strokeStyle = C.verde;
-      ctx.lineWidth = 3;
-      rr(r.x, r.y, r.w, r.h, 24);
-      ctx.stroke();
+      });
 
       if (!exportando && i === E.sel && E.items.length > 1){
-        ctx.strokeStyle = C.verdeClaro;
+        ctx.strokeStyle = T.verde;
         ctx.lineWidth = 5;
         ctx.setLineDash([16, 12]);
         rr(r.x - 5, r.y - 5, r.w + 10, r.h + 10, 28);
@@ -1948,11 +2042,11 @@ const ganadores = {
    PLANTILLA · QUINI 6
    ========================================================================== */
 
-const QUINI_Y0 = 534, QUINI_PASO = 172;
+const QUINI_Y0 = 534, QUINI_PASO = 196;   // 196 desde el diseño claro: cada grupo va en su tarjeta
 // geometría de 6 números en una fila — la que ya usaban Quini y Loto Resultados
-const GRUPO_6 = { cantidad:6, columnas:6, chipH:92, fontNum:46 };
+const GRUPO_6 = { cantidad:6, columnas:6, chipH:84, fontNum:50 };
 // 15 números en 3 filas de 5 — Telekino
-const GRUPO_15 = { cantidad:15, columnas:5, chipH:84, fontNum:42 };
+const GRUPO_15 = { cantidad:15, columnas:5, chipH:76, fontNum:44 };
 
 const quini = {
   nombre: 'Quini 6',
@@ -1979,19 +2073,7 @@ const quini = {
     const E = this.estado;
 
     // ---- chip de fecha ----
-    const f = (E.fecha || '').toUpperCase();
-    ctx.font = `700 24px ${FF}`;
-    const anchoF = [...f].reduce((a, ch) => a + ctx.measureText(ch).width + 4, 0) - 4;
-    const pw = Math.max(anchoF + 64, 180);
-    ctx.fillStyle = C.grafito2;
-    rr(540 - pw/2, 458, pw, 50, 25);
-    ctx.fill();
-    ctx.strokeStyle = C.amarillo;
-    ctx.lineWidth = 2;
-    rr(540 - pw/2, 458, pw, 50, 25);
-    ctx.stroke();
-    ctx.fillStyle = C.amarillo;
-    tracked(f, 540, 491, 4, 'center');
+    drawChipsDuo(458, [[(E.fecha || '').toUpperCase(), C.amarillo]], { pad:64, min:180 });
 
     // ---- 4 grupos de números ----
     E.grupos.forEach((g, i) => {
@@ -2112,22 +2194,7 @@ const lotoResultados = {
     const f  = (E.fecha || '').toUpperCase();
     const np = 'Nº PLUS: ' + (E.numeroPlus || '–').padStart(2, '0');
 
-    ctx.font = `700 24px ${FF}`;
-    const wf = [...f].reduce((a, ch) => a + ctx.measureText(ch).width + 4, 0) - 4;
-    const wp = [...np].reduce((a, ch) => a + ctx.measureText(ch).width + 4, 0) - 4;
-    const pw1 = Math.max(wf + 56, 170), pw2 = Math.max(wp + 56, 170);
-    const gap = 16;
-    let x0 = 540 - (pw1 + gap + pw2) / 2;
-
-    [[f, pw1, C.amarillo], [np, pw2, C.blanco]].forEach(([txt, pw, color]) => {
-      ctx.fillStyle = C.grafito2;
-      rr(x0, 458, pw, 50, 25); ctx.fill();
-      ctx.strokeStyle = C.amarillo; ctx.lineWidth = 2;
-      rr(x0, 458, pw, 50, 25); ctx.stroke();
-      ctx.fillStyle = color;
-      tracked(txt, x0 + pw/2, 491, 3, 'center');
-      x0 += pw + gap;
-    });
+    drawChipsDuo(458, [[f, C.amarillo], [np, C.blanco]]);
 
     // ---- 4 grupos de números (mismo patrón visual que Quini) ----
     E.grupos.forEach((g, i) => {
@@ -2254,57 +2321,60 @@ function drawTablaCategorias(categorias, notaFinal, opts){
   const wMonto = COL_W - wAciertos - wGanadores;
 
   let y = top + Math.max(0, (disponible - naturalH * s) / 2);
+  const R = Math.round(22 * s);
   categorias.forEach((cat, ci) => {
     const catTop = y;
+    const hHeader = m(base.header), hCol = m(base.colLabel), hFila = m(base.fila);
+    const catH = hHeader + hCol + cat.filas.length * hFila;
 
-    const hHeader = m(base.header);
-    const cg = ctx.createLinearGradient(COL_X, 0, COL_X + COL_W, 0);
-    cg.addColorStop(0, C.verde); cg.addColorStop(1, C.verdeClaro);
-    ctx.fillStyle = cg;
-    rr(COL_X, y, COL_W, hHeader, Math.round(14 * s));
-    ctx.fill();
-    ctx.fillStyle = C.blanco;
-    ctx.font = `800 ${Math.max(m(24), 12)}px ${FF}`;
-    tracked((cat.nombre || '').toUpperCase(), 540, y + hHeader/2 + m(24)*0.34, 3, 'center');
-    y += hHeader;
+    // tarjeta blanca con la banda verde del nombre arriba
+    marco(() => {
+      tarjeta(COL_X, catTop, COL_W, catH, R);
+      ctx.save();
+      rr(COL_X, catTop, COL_W, hHeader + R, R); ctx.clip();
+      ctx.fillStyle = T.verde;
+      ctx.fillRect(COL_X, catTop, COL_W, hHeader);
+      ctx.restore();
+      ctx.fillStyle = C.blanco;
+      ctx.font = `800 ${Math.max(m(24), 12)}px ${FF}`;
+      tracked((cat.nombre || '').toUpperCase(), 540, catTop + hHeader/2 + m(24)*0.34, 3, 'center');
 
-    const hCol = m(base.colLabel);
-    ctx.fillStyle = C.gris;
-    ctx.font = `700 ${Math.max(m(17), 9)}px ${FF}`;
-    tracked('ACIERTOS', COL_X + wAciertos/2, y + hCol*0.72, 2, 'center');
-    tracked((cat.tipo || 'POZO').toUpperCase(), COL_X + wAciertos + wMonto/2, y + hCol*0.72, 2, 'center');
-    tracked('GANADORES', COL_X + wAciertos + wMonto + wGanadores/2, y + hCol*0.72, 2, 'center');
-    y += hCol;
+      const yc = catTop + hHeader;
+      ctx.fillStyle = T.muted;
+      ctx.font = `700 ${Math.max(m(17), 9)}px ${FF}`;
+      tracked('ACIERTOS', COL_X + wAciertos/2, yc + hCol*0.72, 2, 'center');
+      tracked((cat.tipo || 'POZO').toUpperCase(), COL_X + wAciertos + wMonto/2, yc + hCol*0.72, 2, 'center');
+      tracked('GANADORES', COL_X + wAciertos + wMonto + wGanadores/2, yc + hCol*0.72, 2, 'center');
+    });
+    y += hHeader + hCol;
 
     cat.filas.forEach((fila, i) => {
-      const hFila = m(base.fila);
-      ctx.fillStyle = i % 2 === 0 ? C.grafito2 : 'rgba(35,35,35,0.5)';
-      ctx.fillRect(COL_X, y, COL_W, hFila);
+      const yf = y;
+      aparecer(540, yf + hFila/2, e => {
+        ctx.fillStyle = T.linea;
+        ctx.fillRect(COL_X + 24, yf, COL_W - 48, 1.5);
 
-      const fFila = Math.max(m(27), 13);
-      ctx.textAlign = 'center';
+        const fFila = Math.max(m(27), 13);
+        ctx.textAlign = 'center';
 
-      ctx.fillStyle = C.amarillo;
-      ctx.font = `900 ${fit(fila.aciertos || '–', wAciertos - m(24), fFila, 900)}px ${FF}`;
-      ctx.fillText(fila.aciertos || '–', COL_X + wAciertos/2, y + hFila/2 + fFila*0.34);
+        ctx.fillStyle = T.numero;
+        ctx.font = `900 ${fit(fila.aciertos || '–', wAciertos - m(24), fFila, 900)}px ${FF}`;
+        ctx.fillText(fila.aciertos || '–', COL_X + wAciertos/2, yf + hFila/2 + fFila*0.34);
 
-      const monto = fmt(fila.monto);
-      ctx.fillStyle = C.blanco;
-      ctx.font = `800 ${fit(monto, wMonto - m(24), fFila, 800)}px ${FF}`;
-      ctx.fillText(monto, COL_X + wAciertos + wMonto/2, y + hFila/2 + fFila*0.34);
+        const monto = fmt(fila.monto);
+        ctx.fillStyle = T.fg;
+        ctx.font = `800 ${fit(monto, wMonto - m(24), fFila, 800)}px ${FF}`;
+        ctx.fillText(contarTexto(monto, e), COL_X + wAciertos + wMonto/2, yf + hFila/2 + fFila*0.34);
 
-      const gan = (fila.ganadores || '').toUpperCase();
-      ctx.fillStyle = C.gris;
-      ctx.font = `700 ${fit(gan, wGanadores - m(24), Math.max(m(22), 11), 700)}px ${FF}`;
-      ctx.fillText(gan, COL_X + wAciertos + wMonto + wGanadores/2, y + hFila/2 + fFila*0.3);
+        const gan = (fila.ganadores || '').toUpperCase();
+        ctx.fillStyle = T.muted;
+        ctx.font = `700 ${fit(gan, wGanadores - m(24), Math.max(m(22), 11), 700)}px ${FF}`;
+        ctx.fillText(gan, COL_X + wAciertos + wMonto + wGanadores/2, yf + hFila/2 + fFila*0.3);
 
-      ctx.textAlign = 'left';
+        ctx.textAlign = 'left';
+      });
       y += hFila;
     });
-
-    ctx.strokeStyle = C.verde;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(COL_X, catTop, COL_W, y - catTop);
 
     // la separación va entre categorías, no después de la última:
     // si no, la nota final se corre hacia la banda legal
@@ -2312,10 +2382,13 @@ function drawTablaCategorias(categorias, notaFinal, opts){
   });
 
   if (notaFinal){
-    ctx.fillStyle = C.amarillo;
-    const txt = notaFinal.toUpperCase();
-    ctx.font = `800 ${fit(txt, COL_W, Math.max(m(30), 14), 800)}px ${FF}`;
-    tracked(txt, 540, y + m(base.nota)*0.6, 2, 'center');
+    const yn = y;
+    marco(() => {
+      ctx.fillStyle = T.verde;
+      const txt = notaFinal.toUpperCase();
+      ctx.font = `800 ${fit(txt, COL_W, Math.max(m(30), 14), 800)}px ${FF}`;
+      tracked(txt, 540, yn + m(base.nota)*0.6, 2, 'center');
+    });
   }
   return y;
 }
@@ -2492,16 +2565,7 @@ ${PROMPT_CIERRE}`,
     const E = this.estado;
 
     // ---- chip de fecha / nº de sorteo ----
-    const f = (E.fecha || '').toUpperCase();
-    ctx.font = `700 24px ${FF}`;
-    const anchoF = [...f].reduce((a, ch) => a + ctx.measureText(ch).width + 4, 0) - 4;
-    const pw = Math.max(anchoF + 64, 180);
-    ctx.fillStyle = C.grafito2;
-    rr(540 - pw/2, 458, pw, 50, 25); ctx.fill();
-    ctx.strokeStyle = C.amarillo; ctx.lineWidth = 2;
-    rr(540 - pw/2, 458, pw, 50, 25); ctx.stroke();
-    ctx.fillStyle = C.amarillo;
-    tracked(f, 540, 491, 4, 'center');
+    drawChipsDuo(458, [[(E.fecha || '').toUpperCase(), C.amarillo]], { pad:64, min:180 });
 
     drawTablaCategorias(E.categorias, E.notaFinal, { top:534, bottom:1660 });
   },
@@ -2572,20 +2636,7 @@ const telekino = {
     // ---- chips: sorteo + fecha ----
     const c1 = 'SORTEO Nº ' + (E.sorteo || '–');
     const c2 = (E.fecha || '').toUpperCase();
-    ctx.font = `700 24px ${FF}`;
-    const anc = t => [...t].reduce((a, ch) => a + ctx.measureText(ch).width + 4, 0) - 4;
-    const pw1 = Math.max(anc(c1) + 56, 170), pw2 = Math.max(anc(c2) + 56, 170);
-    let x0 = 540 - (pw1 + 16 + pw2) / 2;
-
-    [[c1, pw1, C.blanco], [c2, pw2, C.amarillo]].forEach(([txt, pw, color]) => {
-      ctx.fillStyle = C.grafito2;
-      rr(x0, 458, pw, 50, 25); ctx.fill();
-      ctx.strokeStyle = C.amarillo; ctx.lineWidth = 2;
-      rr(x0, 458, pw, 50, 25); ctx.stroke();
-      ctx.fillStyle = color;
-      tracked(txt, x0 + pw/2, 491, 3, 'center');
-      x0 += pw + 16;
-    });
+    drawChipsDuo(458, [[c1, C.blanco], [c2, C.amarillo]]);
 
     // ---- 2 bloques de 15 números en grilla de 5 ----
     E.grupos.forEach((g, i) => {
@@ -2795,67 +2846,55 @@ ${PROMPT_CIERRE}`,
     rondas.forEach((r, idx) => {
       // ---- chip de la ronda ----
       const label = (r.n === 1 ? '1ª RONDA' : r.n === 2 ? '2ª RONDA' : r.n + 'ª RONDA');
-      const fLab = Math.max(m(22), 11);
-      ctx.font = `800 ${fLab}px ${FF}`;
-      const wLabel = Math.max([...label].reduce((a, ch) => a + ctx.measureText(ch).width + 2, 0) + m(50), m(160));
-      const lx = 540 - wLabel / 2;
-      ctx.fillStyle = C.grafito2;
-      rr(lx, y, wLabel, LABEL_H, LABEL_H / 2); ctx.fill();
-      ctx.strokeStyle = C.amarillo; ctx.lineWidth = 2;
-      rr(lx, y, wLabel, LABEL_H, LABEL_H / 2); ctx.stroke();
-      ctx.fillStyle = C.amarillo;
-      tracked(label, 540, y + LABEL_H / 2 + fLab * 0.36, 2, 'center');
+      const yLab = y;
+      marco(() => drawChipTitulo(label, yLab, LABEL_H, Math.max(m(22), 11), m(160)));
       y += LABEL_H + GAP_LT;
 
-      // ---- encabezado de la tabla ----
-      const hg = ctx.createLinearGradient(X, 0, X + ANCHO, 0);
-      hg.addColorStop(0, C.verde); hg.addColorStop(1, C.verdeClaro);
-      ctx.fillStyle = hg;
-      rr(X, y, ANCHO, HEADER_H, m(14)); ctx.fill();
-      ctx.fillStyle = C.blanco;
-      const fHead = Math.max(m(23), 10);
-      cols.forEach((c, i) => {
-        ctx.font = `800 ${fit(c, anchos[i] - 16, fHead, 800)}px ${FF}`;
-        tracked(c, centros[i], y + HEADER_H / 2 + fHead * 0.34, 2, 'center');
+      // ---- tarjeta con su cabecera ----
+      const tablaTop = y, R = m(22);
+      marco(() => {
+        tarjeta(X, tablaTop, ANCHO, HEADER_H + r.filas.length * ROW_H, R);
+        drawCabeceraTabla(X, tablaTop, ANCHO, HEADER_H, R, cols, centros, anchos, Math.max(m(23), 10));
       });
-      const tablaTop = y;
       y += HEADER_H;
 
       // ---- todos los ganadores de esta ronda ----
       r.filas.forEach((g, i) => {
-        ctx.fillStyle = i % 2 === 0 ? C.grafito2 : 'rgba(35,35,35,0.45)';
-        ctx.fillRect(X, y, ANCHO, ROW_H);
-        const fTxt = Math.max(m(29), 11);
-        ctx.textAlign = 'center';
-        [
-          [g.tipo, wTipo, C.blanco, 800],
-          [g.carton, wCarton, C.amarillo, 900],
-          [g.ag, wAg, C.gris, 700],
-          [g.localidad, wLoc, C.gris, 700],
-          [fmt(g.premio), wPremio, C.verdeClaro, 900],
-        ].forEach(([val, w, color, peso], j) => {
-          const t = (val || '–').toString().toUpperCase();
-          ctx.fillStyle = color;
-          ctx.font = `${peso} ${fit(t, w - 16, fTxt, peso)}px ${FF}`;
-          ctx.fillText(t, centros[j], y + ROW_H / 2 + fTxt * 0.34);
+        const yf = y;
+        aparecer(540, yf + ROW_H / 2, e => {
+          if (i > 0){ ctx.fillStyle = T.linea; ctx.fillRect(X + 24, yf, ANCHO - 48, 1.5); }
+          const fTxt = Math.max(m(29), 11);
+          ctx.textAlign = 'center';
+          [
+            [g.tipo, wTipo, T.fg, 800],
+            [g.carton, wCarton, T.numero, 900],
+            [g.ag, wAg, T.muted, 700],
+            [g.localidad, wLoc, T.muted, 700],
+            [fmt(g.premio), wPremio, T.verde, 900],
+          ].forEach(([val, w, color, peso], j) => {
+            const t = (val || '–').toString().toUpperCase();
+            ctx.fillStyle = color;
+            ctx.font = `${peso} ${fit(t, w - 16, fTxt, peso)}px ${FF}`;
+            ctx.fillText(contarTexto(t, e), centros[j], yf + ROW_H / 2 + fTxt * 0.34);
+          });
+          ctx.textAlign = 'left';
         });
-        ctx.textAlign = 'left';
         y += ROW_H;
       });
-
-      ctx.strokeStyle = C.verde; ctx.lineWidth = 2;
-      ctx.strokeRect(X, tablaTop, ANCHO, y - tablaTop);
 
       if (idx < rondas.length - 1) y += GAP_BLOQUES;
     });
 
     if (E.nota){
-      ctx.fillStyle = C.gris;
-      ctx.font = `500 17px ${FF}`;
-      ctx.textAlign = 'center';
-      wrap(E.nota, ANCHO - 40).slice(0, 2)
-        .forEach((ln, i) => ctx.fillText(ln, 540, y + 34 + i * 24));
-      ctx.textAlign = 'left';
+      const yn = y;
+      marco(() => {
+        ctx.fillStyle = T.muted;
+        ctx.font = `500 17px ${FF}`;
+        ctx.textAlign = 'center';
+        wrap(E.nota, ANCHO - 40).slice(0, 2)
+          .forEach((ln, i) => ctx.fillText(ln, 540, yn + 34 + i * 24));
+        ctx.textAlign = 'left';
+      });
     }
   },
 
@@ -3093,66 +3132,71 @@ ${PROMPT_CIERRE}`,
 
     // el turno es lo que distingue una pieza de la otra en un mismo día: va grande
     const tu = (E.turno || '').toUpperCase();
-    ctx.fillStyle = colorNumActual().etiqueta;
-    ctx.font = `900 ${fit(tu, 860, 34, 900)}px ${FF}`;
-    tracked(tu, 540, 552, 7, 'center');
+    marco(() => {
+      ctx.fillStyle = colorNumActual().etiqueta;
+      ctx.font = `900 ${fit(tu, 860, 34, 900)}px ${FF}`;
+      tracked(tu, 540, 552, 7, 'center');
+    });
 
     const HEAD_Y = 572, HEAD_H = 62, ROWS_Y = 642, BOTTOM = 1660;
     const rowH = (BOTTOM - ROWS_Y) / 20;
+    const CN = colorNumActual();
 
     L.forEach((lo, i) => {
       const x = X + i * (colW + GAP);
 
-      // ---- encabezado de columna ----
-      ctx.fillStyle = QUINIELA_TONOS[i % QUINIELA_TONOS.length];
-      rr(x, HEAD_Y, colW, HEAD_H, 14);
-      ctx.fill();
+      // ---- tarjeta de la columna, con la franja de color oficial arriba ----
+      marco(() => {
+        tarjeta(x, HEAD_Y, colW, BOTTOM + 10 - HEAD_Y, 18);
+        ctx.save();
+        rr(x, HEAD_Y, colW, HEAD_H + 18, 18); ctx.clip();
+        ctx.fillStyle = QUINIELA_TONOS[i % QUINIELA_TONOS.length];
+        ctx.fillRect(x, HEAD_Y, colW, HEAD_H);
+        ctx.restore();
 
-      // logo oficial si el nombre coincide con una de las 4 loterías conocidas; si no
-      // (nombre distinto, logo sin cargar todavía), el texto de siempre como respaldo
-      const logoLo = QUINIELA_LOGOS[sinAcentos(lo.nombre)];
-      const puestoLogo = drawImagenEnCaja(logoLo, x + colW/2, HEAD_Y + 23, colW - 24, 32);
-      if (!puestoLogo){
-        const nom = (lo.nombre || '').toUpperCase();
-        ctx.fillStyle = '#181818';
-        ctx.font = `900 ${fit(nom, colW - 18, 20, 900)}px ${FF}`;
-        tracked(nom, x + colW/2, HEAD_Y + 27, 0.5, 'center');
-      }
+        // logo oficial si el nombre coincide con una de las 4 loterías conocidas; si no
+        // (nombre distinto, logo sin cargar todavía), el texto de siempre como respaldo
+        const logoLo = QUINIELA_LOGOS[sinAcentos(lo.nombre)];
+        const puestoLogo = drawImagenEnCaja(logoLo, x + colW/2, HEAD_Y + 23, colW - 24, 32);
+        if (!puestoLogo){
+          const nom = (lo.nombre || '').toUpperCase();
+          ctx.fillStyle = '#181818';
+          ctx.font = `900 ${fit(nom, colW - 18, 20, 900)}px ${FF}`;
+          tracked(nom, x + colW/2, HEAD_Y + 27, 0.5, 'center');
+        }
 
-      ctx.fillStyle = 'rgba(24,24,24,0.70)';
-      ctx.font = `700 ${fit(lo.codigo || '', colW - 18, 15, 700)}px ${FF}`;
-      tracked(lo.codigo || '', x + colW/2, HEAD_Y + 49, 0.5, 'center');
+        ctx.fillStyle = 'rgba(24,24,24,0.70)';
+        ctx.font = `700 ${fit(lo.codigo || '', colW - 18, 15, 700)}px ${FF}`;
+        tracked(lo.codigo || '', x + colW/2, HEAD_Y + 49, 0.5, 'center');
+      });
 
-      // ---- 20 posiciones ----
-      const CN = colorNumActual();
+      // ---- 20 posiciones; en el video entran fila por fila, las 4 loterías a la par ----
       parseCifras(lo.nums, 20, 4).forEach((n, j) => {
         const y = ROWS_Y + j * rowH;
         const primera = j === 0;
+        aparecer(x + colW/2, y + rowH/2, () => {
+          // la primera posición va sobre amarillo y más grande a propósito: es la cifra que
+          // la gente busca primero. El color elegido pinta las otras 19.
+          if (primera){
+            ctx.fillStyle = T.amarillo;
+            rr(x + 6, y + 3, colW - 12, rowH - 6, 12); ctx.fill();
+          } else {
+            ctx.fillStyle = T.linea;
+            ctx.fillRect(x + 12, y, colW - 24, 1.5);
+          }
 
-        ctx.fillStyle = j % 2 ? '#1C1C1C' : C.grafito2;
-        rr(x, y, colW, rowH - 3, 8);
-        ctx.fill();
-        // el recuadro solo se pinta en las que ya tienen número — vacías quedan lisas,
-        // igual que en el resto de la suite
-        if (n && !primera){
-          ctx.strokeStyle = CN.borde; ctx.lineWidth = 1.5;
-          rr(x, y, colW, rowH - 3, 8);
-          ctx.stroke();
-        }
+          ctx.fillStyle = primera ? '#5A4B05' : T.suave;
+          ctx.font = `700 ${primera ? 17 : 15}px ${FF}`;
+          ctx.textAlign = 'left';
+          ctx.fillText(String(j + 1), x + 14, y + rowH/2 + 5);
 
-        ctx.fillStyle = primera ? C.amarillo : '#6E6E6E';
-        ctx.font = `700 ${primera ? 17 : 15}px ${FF}`;
-        ctx.textAlign = 'left';
-        ctx.fillText(String(j + 1), x + 12, y + rowH/2 + 5);
-
-        const fN = primera ? 34 : 29;
-        // la primera posición sigue en amarillo y más grande a propósito: es la cifra que
-        // la gente busca primero. El color elegido pinta las otras 19.
-        ctx.fillStyle = n ? (primera ? C.amarillo : CN.texto) : '#3a3a3a';
-        ctx.font = `900 ${fN}px ${FF}`;
-        ctx.textAlign = 'center';
-        ctx.fillText(n || '––––', x + colW/2 + 11, y + rowH/2 + fN*0.35);
-        ctx.textAlign = 'left';
+          const fN = primera ? 34 : 29;
+          ctx.fillStyle = n ? (primera ? T.fg : CN.texto === '#FFFFFF' ? T.fg : CN.texto) : T.suave;
+          ctx.font = `900 ${fN}px ${FF}`;
+          ctx.textAlign = 'center';
+          ctx.fillText(n || '––––', x + colW/2 + 11, y + rowH/2 + fN*0.35);
+          ctx.textAlign = 'left';
+        }, j * L.length + i);
       });
     });
   },
@@ -3976,23 +4020,23 @@ ${PROMPT_CIERRE}`,
       [((E.fecha || '') + (E.hora ? ' · ' + E.hora : '')).toUpperCase(), C.amarillo],
     ], { font:24, sp:4, pad:48, min:150 });
 
-    // ---- los 5 números de 3 cifras, en cajas grandes ----
+    // ---- los 5 números de 3 cifras, en cajas grandes dentro de una tarjeta ----
     // (drawGrupoNumeros no sirve acá: parseNumeros recorta a 2 dígitos)
     const CN = colorNumActual();
-    const X0 = 70, ANCHO = 940, GAP = 16, N = 5;
-    const chipW = (ANCHO - (N - 1) * GAP) / N, chipH = 120, Y = 548, fontNum = 64;
+    const X0 = 96, ANCHO = 888, GAP = 14, N = 5;
+    const chipW = (ANCHO - (N - 1) * GAP) / N, chipH = 112, Y = 552, fontNum = 62;
+    marco(() => tarjeta(70, Y - 22, 940, chipH + 44, 30));
     parseCifras(E.nums, N, 3).forEach((n, j) => {
       const x = X0 + j * (chipW + GAP);
-      ctx.fillStyle = CN.relleno;
-      rr(x, Y, chipW, chipH, 18); ctx.fill();
-      ctx.strokeStyle = n ? CN.borde : '#2c2c2c';
-      ctx.lineWidth = 2.5;
-      rr(x, Y, chipW, chipH, 18); ctx.stroke();
-      ctx.fillStyle = n ? CN.texto : '#3a3a3a';
-      ctx.font = `900 ${fontNum}px ${FF}`;
-      ctx.textAlign = 'center';
-      ctx.fillText(n || '–', x + chipW/2, Y + chipH/2 + fontNum*0.35);
-      ctx.textAlign = 'left';
+      aparecer(x + chipW/2, Y + chipH/2, () => {
+        ctx.fillStyle = n ? CN.relleno : T.vacio;
+        rr(x, Y, chipW, chipH, 22); ctx.fill();
+        ctx.fillStyle = n ? CN.texto : T.suave;
+        ctx.font = `900 ${fontNum}px ${FF}`;
+        ctx.textAlign = 'center';
+        ctx.fillText(n || '–', x + chipW/2, Y + chipH/2 + fontNum*0.35);
+        ctx.textAlign = 'left';
+      });
     });
 
     // ---- Súper Bola: rótulo + bolilla amarilla, centrados juntos ----
@@ -4000,17 +4044,24 @@ ${PROMPT_CIERRE}`,
     ctx.font = `700 24px ${FF}`;
     const wLabel = [...label].reduce((a, ch) => a + ctx.measureText(ch).width + 4, 0) - 4;
     const total = wLabel + 24 + D;
-    let x = 540 - total / 2;
-    ctx.fillStyle = CN.etiqueta;
-    tracked(label, x, cy + 9, 4, 'left');
+    const x = 540 - total / 2;
+    marco(() => {
+      ctx.fillStyle = CN.etiqueta;
+      ctx.font = `700 24px ${FF}`;
+      tracked(label, x, cy + 9, 4, 'left');
+    });
     const cx = x + wLabel + 24 + D / 2;
-    ctx.fillStyle = C.amarillo;
-    ctx.beginPath(); ctx.arc(cx, cy, D / 2, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = C.grafito;
-    ctx.font = `900 48px ${FF}`;
-    ctx.textAlign = 'center';
-    ctx.fillText(E.superBola || '–', cx, cy + 17);
-    ctx.textAlign = 'left';
+    aparecer(cx, cy, () => {
+      sombra(true);
+      ctx.fillStyle = T.amarillo;
+      ctx.beginPath(); ctx.arc(cx, cy, D / 2, 0, Math.PI * 2); ctx.fill();
+      sombra(false);
+      ctx.fillStyle = T.fg;
+      ctx.font = `900 48px ${FF}`;
+      ctx.textAlign = 'center';
+      ctx.fillText(E.superBola || '–', cx, cy + 17);
+      ctx.textAlign = 'left';
+    });
 
     // ---- las dos tablas; ACIERTOS más ancho porque trae texto ("2 EN 2 (SIN ORDEN)") ----
     drawTablaCategorias(E.categorias, '', { top:810, bottom:1460, anchos:[0.40, 0.24], sMax:1 });
@@ -4124,17 +4175,52 @@ const app = { actual:'ganadores', zonas:false, marca:'A',
               fondo:'verde', fondoImg:null, oscurecer:0.58, colorNumeros:'verde' };
 const plantilla = () => PLANTILLAS[app.actual];
 
-function draw(exportando){
+// Una pieza completa. Con `t` dibuja ese instante de la animación; sin `t`, la pieza quieta
+// (y de paso cuenta sus elementos, que es lo que fija el escalonado de la animación).
+function pintarPieza(exportando, t){
   const P = plantilla();
+  ANIM.on = t !== undefined;
+  ANIM.t = ANIM.on ? t : 99;
+  ANIM.seq = 0;
   ctx.clearRect(0, 0, W, H);
   drawFondo();
   drawHeader(P.estado.titulo, P.estado.plataforma);
   P.draw(exportando);
   drawPieLegal($('legal').value);
   drawStickers(P, exportando);
+  if (!ANIM.on) ANIM.n = ANIM.seq;
+  ANIM.on = false;
+}
+
+function draw(exportando){
+  // mientras se arma el video el ctx apunta a su lienzo: dibujar acá lo ensuciaría. Al
+  // terminar se llama a draw() y la vista previa se pone al día con lo que se haya tocado.
+  if (armandoVideo) return;
+  pararAnimacion();
+  pintarPieza(exportando);
   if (app.zonas && !exportando) drawZonasMuertas();
   // el dibujo de exportación es el mismo contenido sin guías: no cuenta como edición
   if (!exportando) programarGuardado();
+}
+
+/* ---- "Ver animación": la reproduce sobre la vista previa, sin guías ni marcos ----
+   Cualquier edición llama a draw(), que la corta y vuelve a la pieza quieta. */
+function pararAnimacion(){
+  if (!animRAF) return;
+  cancelAnimationFrame(animRAF);
+  animRAF = 0;
+}
+function reproducirAnimacion(){
+  pararAnimacion();
+  pintarPieza(true);                       // cuenta los elementos con los datos de ahora
+  const t0 = performance.now();
+  const cuadro = now => {
+    const t = (now - t0) / 1000;
+    if (t > ANIM_TOPE + 0.6){ animRAF = 0; draw(); return; }
+    pintarPieza(true, Math.min(t, ANIM_TOPE + 0.1));
+    animRAF = requestAnimationFrame(cuadro);
+  };
+  animRAF = requestAnimationFrame(cuadro);
 }
 
 function renderTabs(){
@@ -4367,46 +4453,133 @@ $('oscurecer').addEventListener('input', e => {
 /* Descarga con tres caminos, porque no todos los dispositivos permiten lo mismo:
    1 · celular  → hoja nativa para compartir: guardar en Fotos o mandar directo a Instagram
    2 · escritorio → descarga normal
-   3 · si el navegador bloquea la descarga → queda la imagen a la vista para guardarla a mano */
+   3 · si el navegador bloquea la descarga → queda el archivo a la vista para guardarlo a mano
+   Vale igual para el PNG y para el video.                                                   */
+async function entregar(blob, nombre, tipo){
+  const url = URL.createObjectURL(blob);
+  const esTactil = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  const cosa = tipo === 'video' ? 'el video' : 'la imagen';
+
+  // el respaldo se muestra ANTES de intentar nada: si el navegador bloquea la
+  // descarga o la hoja de compartir no vuelve, igual queda el archivo a mano
+  respaldo(url, esTactil
+    ? `Si no se abrió el menú para guardar, mantené apretado ${cosa} de abajo y elegí Guardar.`
+    : `Si no se descargó solo, hacé clic derecho en ${cosa} de abajo y elegí «Guardar ${tipo === 'video' ? 'video' : 'imagen'} como…».`, tipo);
+  setTimeout(() => URL.revokeObjectURL(url), 180000);
+
+  if (esTactil){
+    try {
+      const file = new File([blob], nombre, { type: blob.type });
+      if (navigator.canShare && navigator.canShare({ files:[file] })){
+        await navigator.share({ files:[file] });   // guardar en Fotos o mandar a Instagram
+        return;
+      }
+    } catch { /* si falla o la cancelan, queda el respaldo visible */ }
+  }
+
+  try {
+    const a = document.createElement('a');
+    a.href = url; a.download = nombre;
+    document.body.appendChild(a); a.click(); a.remove();
+  } catch { /* idem */ }
+}
+
 $('bajar').addEventListener('click', () => {
   draw(true);
-  cv.toBlob(async blob => {
+  cv.toBlob(blob => {
     draw();
     if (!blob) return respaldo(null, 'No pude generar la imagen. Probá de nuevo.');
-
-    const nombre = plantilla().archivo + '.png';
-    const url = URL.createObjectURL(blob);
-    const esTactil = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-
-    // el respaldo se muestra ANTES de intentar nada: si el navegador bloquea la
-    // descarga o la hoja de compartir no vuelve, igual queda la imagen a mano
-    respaldo(url, esTactil
-      ? 'Si no se abrió el menú para guardar, mantené apretada la imagen de abajo y elegí Guardar.'
-      : 'Si no se descargó sola, hacé clic derecho en la imagen de abajo y elegí «Guardar imagen como…».');
-    setTimeout(() => URL.revokeObjectURL(url), 180000);
-
-    if (esTactil){
-      try {
-        const file = new File([blob], nombre, { type:'image/png' });
-        if (navigator.canShare && navigator.canShare({ files:[file] })){
-          await navigator.share({ files:[file] });   // guardar en Fotos o mandar a Instagram
-          return;
-        }
-      } catch { /* si falla o la cancelan, queda el respaldo visible */ }
-    }
-
-    try {
-      const a = document.createElement('a');
-      a.href = url; a.download = nombre;
-      document.body.appendChild(a); a.click(); a.remove();
-    } catch { /* idem */ }
+    entregar(blob, plantilla().archivo + '.png', 'imagen');
   }, 'image/png');
 });
 
-function respaldo(url, texto){
+/* ---- Video MP4 de 10 s (13/10/2026) ----
+   Se dibuja cuadro por cuadro en un canvas aparte y se codifica en H.264 con WebCodecs;
+   mp4-muxer (embebido arriba) lo empaqueta en un MP4. No se graba en tiempo real: el
+   resultado es el mismo en cualquier compu, rápida o lenta. Los primeros 3 s son la
+   animación; del 3 al 10 se repite el último cuadro, que no cuesta nada.               */
+const VIDEO = { fps:30, segundos:10, bitrate:8_000_000 };
+// High, Main y Baseline, todos nivel 4.0, que alcanza justo para 1080 × 1920
+const CODECS_H264 = ['avc1.640028', 'avc1.4d0028', 'avc1.42e028'];
+async function configVideo(){
+  if (!('VideoEncoder' in window) || !window.Mp4Muxer) return null;
+  for (const codec of CODECS_H264){
+    const cfg = { codec, width:W, height:H, bitrate:VIDEO.bitrate, framerate:VIDEO.fps, avc:{ format:'avc' } };
+    try {
+      const r = await VideoEncoder.isConfigSupported(cfg);
+      if (r.supported) return r.config;
+    } catch { /* se prueba el siguiente */ }
+  }
+  return null;
+}
+
+async function armarVideo(progreso){
+  const config = await configVideo();
+  if (!config) throw new Error('Este navegador no puede armar el video. Abrí la herramienta en Chrome o Edge actualizados; el PNG sale igual.');
+
+  const muxer = new Mp4Muxer.Muxer({
+    target: new Mp4Muxer.ArrayBufferTarget(),
+    video: { codec:'avc', width:W, height:H, frameRate:VIDEO.fps },
+    fastStart: 'in-memory',
+  });
+  let falla = null;
+  const enc = new VideoEncoder({
+    output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+    error: e => { falla = e; },
+  });
+  enc.configure(config);
+
+  const lienzo = document.createElement('canvas');
+  lienzo.width = W; lienzo.height = H;
+  const ctxVista = ctx;
+  ctx = lienzo.getContext('2d');
+  try {
+    pintarPieza(true);                                 // cuenta los elementos
+    const total = VIDEO.fps * VIDEO.segundos, paso = 1e6 / VIDEO.fps;
+    for (let f = 0; f < total; f++){
+      if (falla) throw falla;
+      const t = f / VIDEO.fps;
+      if (t <= ANIM_TOPE + 0.1) pintarPieza(true, t);  // después, el lienzo ya tiene el final
+      const cuadro = new VideoFrame(lienzo, { timestamp: Math.round(f * paso), duration: Math.round(paso) });
+      enc.encode(cuadro, { keyFrame: f % (VIDEO.fps * 2) === 0 });
+      cuadro.close();
+      while (enc.encodeQueueSize > 6) await new Promise(r => setTimeout(r, 5));
+      if (f % 10 === 0){ progreso(f / total); await new Promise(r => setTimeout(r, 0)); }
+    }
+    await enc.flush();
+    if (falla) throw falla;
+    muxer.finalize();
+    return new Blob([muxer.target.buffer], { type:'video/mp4' });
+  } finally {
+    ctx = ctxVista;
+    try { enc.close(); } catch { /* ya cerrado */ }
+  }
+}
+
+$('bajarVideo').addEventListener('click', async () => {
+  if (armandoVideo) return;
+  const btn = $('bajarVideo'), texto = btn.textContent;
+  armandoVideo = true; btn.disabled = true;
+  try {
+    const blob = await armarVideo(p => { btn.textContent = `Armando video… ${Math.round(p * 100)}%`; });
+    entregar(blob, plantilla().archivo + '.mp4', 'video');
+  } catch (e) {
+    respaldo(null, (e && e.message) || 'No pude armar el video. Probá de nuevo.');
+  } finally {
+    armandoVideo = false; btn.disabled = false; btn.textContent = texto;
+    draw();
+  }
+});
+
+$('verAnim').addEventListener('click', reproducirAnimacion);
+
+function respaldo(url, texto, tipo){
   const cont = $('respaldo');
-  cont.innerHTML = `<p class="hint" style="margin:0 0 8px">${texto}</p>` +
-    (url ? `<img src="${url}" alt="Historia generada" style="width:100%;border-radius:8px;display:block">` : '');
+  const medio = !url ? ''
+    : tipo === 'video'
+      ? `<video src="${url}" controls loop muted playsinline style="width:100%;border-radius:8px;display:block"></video>`
+      : `<img src="${url}" alt="Historia generada" style="width:100%;border-radius:8px;display:block">`;
+  cont.innerHTML = `<p class="hint" style="margin:0 0 8px">${texto}</p>` + medio;
   cont.style.display = 'block';
 }
 
